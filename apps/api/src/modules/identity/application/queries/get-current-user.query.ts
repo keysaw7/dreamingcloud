@@ -10,6 +10,7 @@ export interface UserDto {
   readonly displayName: string;
   readonly bio: string | null;
   readonly status: string;
+  readonly role: string;
   readonly emailVerifiedAt: string | null;
 }
 
@@ -30,6 +31,7 @@ export class GetCurrentUserQuery {
       displayName: user.displayName,
       bio: user.bio,
       status: user.status,
+      role: user.role,
       emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
     };
   }

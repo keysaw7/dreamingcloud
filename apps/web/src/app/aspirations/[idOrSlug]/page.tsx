@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Card } from '@dreamingcloud/ui';
 
@@ -7,6 +8,7 @@ import { AspirationActions } from './aspiration-actions';
 interface AspirationResponse {
   data: {
     id: string;
+    ownerId: string;
     title: string;
     story: string;
     progressPercent: number;
@@ -41,8 +43,21 @@ export default async function AspirationPage({
           Progression {aspiration.progressPercent}%
         </p>
         <h1 className="mt-2 text-3xl font-semibold">{aspiration.title}</h1>
+        <p className="mt-2 text-sm text-[var(--dc-color-muted)]">
+          Par{' '}
+          <Link
+            href={`/users/${aspiration.ownerId}`}
+            className="text-[var(--dc-color-primary)] underline"
+          >
+            le porteur
+          </Link>
+        </p>
         <p className="mt-4 whitespace-pre-wrap text-[var(--dc-color-ink)]">{aspiration.story}</p>
-        <AspirationActions aspirationId={aspiration.id} />
+        <AspirationActions
+          aspirationId={aspiration.id}
+          ownerId={aspiration.ownerId}
+          needs={aspiration.needs}
+        />
       </Card>
 
       <section className="mt-6 grid gap-4 md:grid-cols-2">

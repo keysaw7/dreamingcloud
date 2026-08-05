@@ -1,9 +1,11 @@
-import { Body, Controller, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, NotFoundException, Param, Post } from '@nestjs/common';
 import { z } from 'zod';
 
+import { Public } from '../../../../platform/security/authorization';
 import { CurrentUser } from '../../../identity/presentation/http/current-user.decorator';
 import { ConfirmUploadUseCase } from '../../application/commands/confirm-upload.use-case';
 import { RequestUploadUseCase } from '../../application/commands/request-upload.use-case';
+import { GetMediaQuery } from '../../application/queries/get-media.query';
 
 const requestUploadSchema = z.object({
   mimeType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
@@ -19,7 +21,25 @@ export class MediaController {
   public constructor(
     private readonly requestUpload: RequestUploadUseCase,
     private readonly confirmUpload: ConfirmUploadUseCase,
+    private readonly getMedia: GetMediaQuery,
   ) {}
+
+  @Public()
+  @Get(':id')
+  public async getById(@Param('id') mediaId: string) {
+    try {
+      const media = await this.getMedia.execute(mediaId);
+      if (!media) {
+        throw new NotFoundException('Média introuvable.');
+      }
+      return { data: media };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new NotFoundException('Média introuvable.');
+    }
+  }
 
   @Post('uploads')
   public async createUpload(@CurrentUser() userId: string, @Body() body: unknown) {

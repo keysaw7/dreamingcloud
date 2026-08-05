@@ -7,6 +7,7 @@ import { SaveAspirationUseCase } from './application/commands/save-aspiration.us
 import { UnfollowUserUseCase } from './application/commands/unfollow-user.use-case';
 import { UnsaveAspirationUseCase } from './application/commands/unsave-aspiration.use-case';
 import { WithdrawSupportUseCase } from './application/commands/withdraw-support.use-case';
+import { ListCommentsQuery } from './application/queries/list-comments.query';
 import { SOCIAL_REPOSITORY } from './domain/ports/social.repository';
 import { DrizzleSocialRepository } from './infrastructure/persistence/drizzle-social.repository';
 import { FollowsController } from './presentation/http/follows.controller';
@@ -22,6 +23,7 @@ import { SocialController } from './presentation/http/social.controller';
     UnsaveAspirationUseCase,
     FollowUserUseCase,
     UnfollowUserUseCase,
+    ListCommentsQuery,
     { provide: SOCIAL_REPOSITORY, useClass: DrizzleSocialRepository },
   ],
 })

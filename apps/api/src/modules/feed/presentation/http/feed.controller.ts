@@ -1,6 +1,8 @@
 import { Controller, Get, Query } from '@nestjs/common';
 
+import { Public } from '../../../../platform/security/authorization';
 import { CurrentUser } from '../../../identity/presentation/http/current-user.decorator';
+import { OptionalUser } from '../../../identity/presentation/http/optional-user.decorator';
 import { ListDiscoverFeedQuery } from '../../application/queries/list-discover-feed.query';
 import { ListFollowingFeedQuery } from '../../application/queries/list-following-feed.query';
 
@@ -11,9 +13,10 @@ export class FeedController {
     private readonly listFollowing: ListFollowingFeedQuery,
   ) {}
 
+  @Public()
   @Get('discover')
   public async discover(
-    @CurrentUser() _userId: string,
+    @OptionalUser() _userId: string | null,
     @Query('cursor') cursor?: string,
     @Query('limit') limit = '20',
   ) {

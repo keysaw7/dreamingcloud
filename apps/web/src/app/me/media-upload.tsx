@@ -9,6 +9,7 @@ const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 export function MediaUpload() {
   const [message, setMessage] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   async function onChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -45,6 +46,11 @@ export function MediaUpload() {
         method: 'POST',
         body: '{}',
       });
+
+      const media = await apiFetch<{ data: { publicUrl: string | null } }>(
+        `/media/${requested.data.mediaId}`,
+      );
+      setPreviewUrl(media.data.publicUrl);
       setMessage(`Média ${requested.data.mediaId} confirmé.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Upload impossible');
@@ -55,6 +61,13 @@ export function MediaUpload() {
     <div className="mt-6 space-y-2 border-t border-[var(--dc-color-border)] pt-6">
       <h2 className="text-lg font-medium">Médias</h2>
       <input type="file" accept="image/jpeg,image/png,image/webp" onChange={onChange} />
+      {previewUrl ? (
+        <img
+          src={previewUrl}
+          alt="Aperçu du média uploadé"
+          className="mt-2 h-32 w-32 rounded-[var(--dc-radius-md)] object-cover"
+        />
+      ) : null}
       <Button variant="ghost" type="button" onClick={() => setMessage(null)}>
         Effacer le statut
       </Button>

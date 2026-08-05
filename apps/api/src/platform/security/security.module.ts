@@ -4,7 +4,6 @@ import { APP_GUARD } from '@nestjs/core';
 import { IdentityModule } from '../../modules/identity/identity.module';
 import { AuthGuard } from './auth.guard';
 import { CsrfGuard } from './csrf.guard';
-import { PolicyGuard } from './policy.guard';
 
 @Global()
 @Module({
@@ -12,7 +11,6 @@ import { PolicyGuard } from './policy.guard';
   providers: [
     AuthGuard,
     CsrfGuard,
-    PolicyGuard,
     {
       provide: APP_GUARD,
       useExisting: AuthGuard,

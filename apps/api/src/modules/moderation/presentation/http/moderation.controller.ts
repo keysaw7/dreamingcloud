@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { z } from 'zod';
 
 import { RequirePolicies } from '../../../../platform/security/authorization';
 import { CurrentUser } from '../../../identity/presentation/http/current-user.decorator';
 import { ReportContentUseCase } from '../../application/commands/report-content.use-case';
+import { ResolveReportUseCase } from '../../application/commands/resolve-report.use-case';
 import { ListOpenReportsQuery } from '../../application/queries/list-open-reports.query';
 
 @Controller()
@@ -11,6 +12,7 @@ export class ModerationController {
   public constructor(
     private readonly reportContent: ReportContentUseCase,
     private readonly listOpenReports: ListOpenReportsQuery,
+    private readonly resolveReport: ResolveReportUseCase,
   ) {}
 
   @Post('reports')
@@ -44,5 +46,29 @@ export class ModerationController {
       ...(cursor ? { cursor } : {}),
     });
     return { data: page.data, meta: page.meta };
+  }
+
+  @RequirePolicies('role:admin')
+  @Post('moderation/reports/:id/resolve')
+  public async resolve(
+    @CurrentUser() userId: string,
+    @Param('id') reportId: string,
+    @Body() body: unknown,
+  ) {
+    const input = z
+      .object({
+        action: z.enum(['dismiss', 'remove']),
+        reason: z.string().min(3).max(500),
+      })
+      .parse(body);
+
+    return {
+      data: await this.resolveReport.execute({
+        reportId,
+        moderatorId: userId,
+        action: input.action,
+        reason: input.reason,
+      }),
+    };
   }
 }

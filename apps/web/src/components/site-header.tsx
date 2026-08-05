@@ -18,8 +18,8 @@ export function SiteHeader() {
           <Link href="/following">{t('following')}</Link>
           <Link href="/aspirations/new">{t('newAspiration')}</Link>
           <Link href="/conversations">{t('messages')}</Link>
-          <Link href="/notifications">Notifications</Link>
-          <Link href="/me">Profil</Link>
+          <Link href="/notifications">{t('notifications')}</Link>
+          <Link href="/me">{t('profile')}</Link>
           <Link href="/auth/login">{t('login')}</Link>
         </nav>
       </div>

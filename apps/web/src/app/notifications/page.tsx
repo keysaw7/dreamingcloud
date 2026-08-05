@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Button, Card } from '@dreamingcloud/ui';
 
 import { apiFetchServer } from '../../lib/api-server';
+import { NotificationList } from './notification-list';
 
 interface NotificationsResponse {
   data: Array<{
@@ -34,22 +35,8 @@ export default async function NotificationsPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
       <h1 className="text-2xl font-semibold">Notifications</h1>
-      <div className="mt-6 space-y-3">
-        {items.length === 0 ? (
-          <Card>
-            <p className="text-sm text-[var(--dc-color-muted)]">Aucune notification.</p>
-          </Card>
-        ) : (
-          items.map((item) => (
-            <Card key={item.id}>
-              <p className="text-sm font-medium">{item.type}</p>
-              <p className="mt-1 text-sm text-[var(--dc-color-muted)]">
-                {new Date(item.createdAt).toLocaleString('fr-FR')}
-                {item.readAt ? ' · lu' : ' · non lu'}
-              </p>
-            </Card>
-          ))
-        )}
+      <div className="mt-6">
+        <NotificationList initialItems={items} />
       </div>
     </main>
   );

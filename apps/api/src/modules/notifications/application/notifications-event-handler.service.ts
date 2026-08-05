@@ -128,6 +128,13 @@ export class NotificationsEventHandler {
       return targetId ? this.excludeActor([targetId], event.actorId) : [];
     }
 
+    if (event.name === 'messaging.message.sent.v1') {
+      const recipientIds = Array.isArray(event.payload.recipientIds)
+        ? event.payload.recipientIds.filter((id): id is string => typeof id === 'string')
+        : [];
+      return this.excludeActor(recipientIds, event.actorId);
+    }
+
     return [];
   }
 

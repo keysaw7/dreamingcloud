@@ -63,7 +63,7 @@ export class LoginUserUseCase {
     const accessToken = await this.tokenService.signAccessToken({
       sub: user.id.value,
       email: user.email,
-      roles: ['user'],
+      roles: [user.role],
     });
 
     return {

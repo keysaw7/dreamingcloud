@@ -9,7 +9,7 @@ import {
   userSettings,
   users,
 } from '../../../../platform/database/schema';
-import { User } from '../../domain/entities/user.entity';
+import { User, type UserRole } from '../../domain/entities/user.entity';
 import type { UserRepository } from '../../domain/ports/user.repository';
 import type { UserStatus } from '../../domain/value-objects/user-status';
 
@@ -24,6 +24,7 @@ export class DrizzleUserRepository implements UserRepository {
         email: users.email,
         username: users.username,
         status: users.status,
+        role: users.role,
         emailVerifiedAt: users.emailVerifiedAt,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
@@ -45,6 +46,7 @@ export class DrizzleUserRepository implements UserRepository {
         email: users.email,
         username: users.username,
         status: users.status,
+        role: users.role,
         emailVerifiedAt: users.emailVerifiedAt,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
@@ -66,6 +68,7 @@ export class DrizzleUserRepository implements UserRepository {
         email: users.email,
         username: users.username,
         status: users.status,
+        role: users.role,
         emailVerifiedAt: users.emailVerifiedAt,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
@@ -90,6 +93,7 @@ export class DrizzleUserRepository implements UserRepository {
         email: snapshot.email,
         username: snapshot.username,
         status: snapshot.status,
+        role: snapshot.role,
         emailVerifiedAt: snapshot.emailVerifiedAt,
         createdAt: snapshot.createdAt,
         updatedAt: snapshot.updatedAt,
@@ -98,6 +102,7 @@ export class DrizzleUserRepository implements UserRepository {
         target: users.id,
         set: {
           status: snapshot.status,
+          role: snapshot.role,
           emailVerifiedAt: snapshot.emailVerifiedAt,
           updatedAt: snapshot.updatedAt,
           deletedAt: snapshot.status === 'deleted' ? snapshot.updatedAt : null,
@@ -202,6 +207,7 @@ export class DrizzleUserRepository implements UserRepository {
     email: string;
     username: string;
     status: string;
+    role: string;
     emailVerifiedAt: Date | null;
     createdAt: Date;
     updatedAt: Date;
@@ -213,6 +219,7 @@ export class DrizzleUserRepository implements UserRepository {
       email: row.email,
       username: row.username,
       status: row.status as UserStatus,
+      role: (row.role === 'admin' ? 'admin' : 'user') as UserRole,
       emailVerifiedAt: row.emailVerifiedAt,
       displayName: row.displayName,
       bio: row.bio,

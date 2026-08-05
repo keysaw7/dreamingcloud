@@ -33,14 +33,26 @@ cp .env.example .env
 # 4. Migrations
 pnpm db:migrate
 
-# 5. Applications
+# 5. Données de démonstration (optionnel)
+pnpm db:seed
+
+# 6. Applications
 pnpm dev
 ```
-
 
 - Web : [http://localhost:3000](http://localhost:3000)
 - API : [http://localhost:3001/api/v1/health](http://localhost:3001/api/v1/health)
 - MinIO console : [http://localhost:9001](http://localhost:9001)
+
+### Comptes de démo
+
+Mot de passe commun : `DemoPass123!`
+
+| E-mail | Rôle | Usage |
+| --- | --- | --- |
+| `admin@demo.local` | admin | Modération (`/admin/reports`) |
+| `lea@demo.local` | user | Porteuse d’aspirations |
+| `noah@demo.local` | user | Contributeur / messagerie |
 
 ## Scripts utiles
 
@@ -50,7 +62,9 @@ pnpm dev
 | `pnpm lint` | Biome + garde-fous d’architecture |
 | `pnpm typecheck` | Vérification TypeScript |
 | `pnpm test` | Tests unitaires et d’intégration |
-| `pnpm --filter @dreamingcloud/api db:migrate:sql` | Applique `apps/api/drizzle/*.sql` |
+| `pnpm db:migrate` | Applique `apps/api/drizzle/*.sql` |
+| `pnpm db:seed` | Charge les comptes et contenus de démo |
+| `pnpm --filter @dreamingcloud/web test:e2e` | Parcours Playwright (API + web déjà démarrés) |
 
 ## Architecture
 

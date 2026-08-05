@@ -2,11 +2,14 @@ import { AggregateRoot, UniqueId, type DomainEvent } from '@dreamingcloud/shared
 
 import type { UserStatus } from '../value-objects/user-status';
 
+export type UserRole = 'user' | 'admin';
+
 export interface UserProps {
   readonly id: UniqueId;
   readonly email: string;
   readonly username: string;
   readonly status: UserStatus;
+  readonly role: UserRole;
   readonly emailVerifiedAt: Date | null;
   readonly displayName: string;
   readonly bio: string | null;
@@ -32,6 +35,7 @@ export class User extends AggregateRoot {
       email: input.email.toLowerCase(),
       username: input.username.toLowerCase(),
       status: 'pending',
+      role: 'user',
       emailVerifiedAt: null,
       displayName: input.displayName,
       bio: null,
@@ -76,6 +80,10 @@ export class User extends AggregateRoot {
 
   public get status(): UserStatus {
     return this.props.status;
+  }
+
+  public get role(): UserRole {
+    return this.props.role;
   }
 
   public get emailVerifiedAt(): Date | null {

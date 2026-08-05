@@ -10,6 +10,7 @@ import { ResetPasswordUseCase } from './application/commands/reset-password.use-
 import { UpdateProfileUseCase } from './application/commands/update-profile.use-case';
 import { VerifyEmailUseCase } from './application/commands/verify-email.use-case';
 import { GetCurrentUserQuery } from './application/queries/get-current-user.query';
+import { GetPublicProfileQuery } from './application/queries/get-public-profile.query';
 import { MAILER } from './domain/ports/mailer';
 import { PASSWORD_HASHER } from './domain/ports/password-hasher';
 import { SESSION_REPOSITORY } from './domain/ports/session.repository';
@@ -25,12 +26,13 @@ import { DrizzleTokenRepository } from './infrastructure/persistence/drizzle-tok
 import { DrizzleUserRepository } from './infrastructure/persistence/drizzle-user.repository';
 import { IDENTITY_PUBLIC_API } from './identity.public';
 import { AuthController } from './presentation/http/auth.controller';
+import { UsersController } from './presentation/http/users.controller';
 import type { AppConfig } from '../../platform/config/app-config';
 import { APP_CONFIG } from '../../platform/config/config.module';
 import type { Mailer } from './domain/ports/mailer';
 
 @Module({
-  controllers: [AuthController],
+  controllers: [AuthController, UsersController],
   providers: [
     RegisterUserUseCase,
     LoginUserUseCase,
@@ -42,6 +44,7 @@ import type { Mailer } from './domain/ports/mailer';
     UpdateProfileUseCase,
     DeleteAccountUseCase,
     GetCurrentUserQuery,
+    GetPublicProfileQuery,
     { provide: USER_REPOSITORY, useClass: DrizzleUserRepository },
     { provide: SESSION_REPOSITORY, useClass: DrizzleSessionRepository },
     { provide: TOKEN_REPOSITORY, useClass: DrizzleTokenRepository },

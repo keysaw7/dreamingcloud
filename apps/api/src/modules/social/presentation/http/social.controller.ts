@@ -1,12 +1,14 @@
-import { Body, Controller, Delete, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
 import { z } from 'zod';
 
+import { Public } from '../../../../platform/security/authorization';
 import { CurrentUser } from '../../../identity/presentation/http/current-user.decorator';
 import { CreateCommentUseCase } from '../../application/commands/create-comment.use-case';
 import { GiveSupportUseCase } from '../../application/commands/give-support.use-case';
 import { SaveAspirationUseCase } from '../../application/commands/save-aspiration.use-case';
 import { UnsaveAspirationUseCase } from '../../application/commands/unsave-aspiration.use-case';
 import { WithdrawSupportUseCase } from '../../application/commands/withdraw-support.use-case';
+import { ListCommentsQuery } from '../../application/queries/list-comments.query';
 
 const createCommentSchema = z.object({
   body: z.string().min(1).max(2000),
@@ -28,7 +30,24 @@ export class SocialController {
     private readonly createComment: CreateCommentUseCase,
     private readonly saveAspiration: SaveAspirationUseCase,
     private readonly unsaveAspiration: UnsaveAspirationUseCase,
+    private readonly listComments: ListCommentsQuery,
   ) {}
+
+  @Public()
+  @Get('comments')
+  public async comments(
+    @Param('id') aspirationId: string,
+    @Query('cursor') cursor?: string,
+    @Query('limit') limit = '20',
+  ) {
+    const pageSize = Math.min(Number(limit) || 20, 50);
+    const page = await this.listComments.execute({
+      aspirationId,
+      limit: pageSize,
+      ...(cursor ? { cursor } : {}),
+    });
+    return { data: page.data, meta: page.meta };
+  }
 
   @Post('support')
   public async support(@CurrentUser() userId: string, @Param('id') aspirationId: string) {

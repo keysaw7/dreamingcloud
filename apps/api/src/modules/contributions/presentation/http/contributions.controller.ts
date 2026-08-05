@@ -67,7 +67,11 @@ export class ContributionsController {
         contributionType: item.contributionType,
         description: item.description,
         contributorId: item.contributorId.value,
+        ownerId: item.ownerId.value,
+        needId: item.needId?.value ?? null,
         conversationId: item.conversationId?.value ?? null,
+        completedByContributorAt: item.completedByContributorAt?.toISOString() ?? null,
+        completedByOwnerAt: item.completedByOwnerAt?.toISOString() ?? null,
       })),
     };
   }

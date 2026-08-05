@@ -13,6 +13,7 @@ interface MeResponse {
     displayName: string;
     bio: string | null;
     status: string;
+    role?: string;
   };
 }
 
@@ -46,9 +47,17 @@ export default async function MePage() {
         <p className="mt-4">{me.bio ?? 'Aucune bio pour le moment.'}</p>
         <p className="mt-6 text-sm">Statut : {me.status}</p>
         <div className="mt-6 flex flex-wrap gap-3">
+          <Link href={`/users/${me.username}`}>
+            <Button variant="secondary">Profil public</Button>
+          </Link>
           <Link href="/notifications">
             <Button variant="secondary">Notifications</Button>
           </Link>
+          {me.role === 'admin' ? (
+            <Link href="/admin/reports">
+              <Button variant="secondary">Modération</Button>
+            </Link>
+          ) : null}
           <Link href="/legal/privacy">
             <Button variant="secondary">Confidentialité</Button>
           </Link>

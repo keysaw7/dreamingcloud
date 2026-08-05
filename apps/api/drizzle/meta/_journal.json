@@ -15,6 +15,13 @@
       "when": 1785945660000,
       "tag": "0001_mvp_identity_messaging",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785945720000,
+      "tag": "0002_user_roles",
+      "breakpoints": true
     }
   ]
 }
