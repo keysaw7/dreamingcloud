@@ -1,0 +1,15 @@
+:root {
+  --dc-color-ink: #18271f;
+  --dc-color-canvas: #f8f8f4;
+  --dc-color-surface: #ffffff;
+  --dc-color-primary: #287e50;
+  --dc-color-primary-foreground: #ffffff;
+  --dc-color-muted: #65736b;
+  --dc-color-border: #dde5de;
+  --dc-color-danger: #ba1a1a;
+
+  --dc-radius-sm: 0.5rem;
+  --dc-radius-md: 0.75rem;
+  --dc-radius-lg: 1rem;
+  --dc-radius-xl: 1.5rem;
+}

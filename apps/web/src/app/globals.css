@@ -1,0 +1,20 @@
+@import "tailwindcss";
+@import "@dreamingcloud/design-tokens/tokens.css";
+
+@theme inline {
+  --color-ink: var(--dc-color-ink);
+  --color-canvas: var(--dc-color-canvas);
+  --color-surface: var(--dc-color-surface);
+  --color-primary: var(--dc-color-primary);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--dc-color-canvas);
+  color: var(--dc-color-ink);
+  font-family: Arial, Helvetica, sans-serif;
+}

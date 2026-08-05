@@ -1,0 +1,22 @@
+FROM node:22-bookworm-slim AS deps
+WORKDIR /app
+RUN corepack enable
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY apps/api/package.json apps/api/
+COPY packages ./packages
+RUN pnpm install --frozen-lockfile --filter @dreamingcloud/api...
+
+FROM deps AS build
+COPY apps/api apps/api
+COPY packages packages
+COPY tsconfig*.json ./
+RUN pnpm --filter @dreamingcloud/api build
+
+FROM node:22-bookworm-slim AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
+RUN corepack enable
+COPY --from=build /app /app
+EXPOSE 3001
+HEALTHCHECK --interval=10s --timeout=5s --retries=5 CMD node -e "fetch('http://127.0.0.1:3001/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["pnpm", "--filter", "@dreamingcloud/api", "exec", "node", "dist/main.js"]

@@ -1,0 +1,41 @@
+{
+  "common": {
+    "appName": "DreamingCloud",
+    "tagline": "Le réseau mondial des aspirations humaines",
+    "support": "Je soutiens",
+    "loading": "Chargement…",
+    "save": "Enregistrer",
+    "publish": "Publier",
+    "logout": "Se déconnecter"
+  },
+  "nav": {
+    "discover": "Découvrir",
+    "following": "Suivis",
+    "newAspiration": "Nouvelle aspiration",
+    "messages": "Messages",
+    "profile": "Profil",
+    "login": "Connexion",
+    "register": "Créer un compte"
+  },
+  "auth": {
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "username": "Nom d’utilisateur",
+    "displayName": "Nom affiché",
+    "loginTitle": "Connexion",
+    "registerTitle": "Créer un compte",
+    "verifyHint": "Vérifiez votre e-mail pour activer votre compte."
+  },
+  "aspirations": {
+    "title": "Titre de votre rêve",
+    "story": "Racontez votre histoire",
+    "addNeed": "Ajouter un besoin",
+    "proposeHelp": "Proposer mon aide",
+    "milestones": "Jalons",
+    "needs": "Besoins"
+  },
+  "legal": {
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions d’utilisation"
+  }
+}

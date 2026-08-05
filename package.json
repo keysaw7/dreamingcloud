@@ -1,0 +1,29 @@
+{
+  "name": "dreamingcloud",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.18.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=11.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "biome check . && node scripts/check-architecture.mjs && depcruise apps/api/src --config .dependency-cruiser.cjs",
+    "format": "biome format --write .",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "db:up": "docker compose -f infra/docker/docker-compose.yml up -d",
+    "db:migrate": "pnpm --filter @dreamingcloud/api db:migrate:sql"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.7",
+    "@types/node": "^26.1.2",
+    "dependency-cruiser": "^18.1.1",
+    "tsx": "^4.23.5",
+    "turbo": "^2.10.8",
+    "typescript": "~5.9.3",
+    "vitest": "^4.1.10"
+  }
+}

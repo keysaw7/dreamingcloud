@@ -1,0 +1,16 @@
+{
+  "name": "@dreamingcloud/worker",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "pnpm --filter @dreamingcloud/api build",
+    "dev": "tsx watch --tsconfig ../api/tsconfig.json ../api/src/worker-main.ts",
+    "start": "node ../api/dist/worker-main.js",
+    "lint": "biome check src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@dreamingcloud/api": "workspace:*"
+  }
+}

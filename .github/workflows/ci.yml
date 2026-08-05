@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: dreamingcloud
+          POSTGRES_PASSWORD: dreamingcloud
+          POSTGRES_DB: dreamingcloud
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dreamingcloud -d dreamingcloud"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      valkey:
+        image: valkey/valkey:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "valkey-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://dreamingcloud:dreamingcloud@localhost:5432/dreamingcloud
+      REDIS_URL: redis://localhost:6379
+      COOKIE_SECRET: ci-cookie-secret-change-me
+      CSRF_SECRET: ci-csrf-secret-change-me
+      CI: true
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.18.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @dreamingcloud/api db:migrate:sql
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm test

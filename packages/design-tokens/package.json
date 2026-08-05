@@ -1,0 +1,15 @@
+{
+  "name": "@dreamingcloud/design-tokens",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tokens.css": "./src/tokens.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "biome check src",
+    "typecheck": "tsc --noEmit"
+  }
+}
