@@ -1,37 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@dreamingcloud/ui';
+import { useTranslations } from 'next-intl';
+import { useEffect, useState } from 'react';
+import { Alert, Badge, Button, Card, Field, Select, Textarea } from '@dreamingcloud/ui';
 
+import { listComments, listContributions } from '../../../lib/api/aspirations';
 import { apiFetch } from '../../../lib/api';
+import { contributionStatusLabel, formatRelativeDate } from '../../../lib/format';
+import type { CommentItem, ContributionItem } from '../../../lib/types';
 
 interface NeedItem {
   id: string;
   title: string;
   needType: string;
-}
-
-interface ContributionItem {
-  id: string;
-  status: string;
-  contributionType: string;
-  description: string;
-  contributorId: string;
-  ownerId: string;
-  needId: string | null;
-  conversationId: string | null;
-  completedByContributorAt: string | null;
-  completedByOwnerAt: string | null;
-}
-
-interface CommentItem {
-  id: string;
-  authorId: string;
-  authorUsername: string;
-  authorDisplayName: string;
-  body: string;
-  createdAt: string;
 }
 
 const CONTRIBUTION_TYPES = [
@@ -61,8 +43,15 @@ export function AspirationActions({
   ownerId: string;
   needs: readonly NeedItem[];
 }) {
+  const t = useTranslations('contribution');
+  const social = useTranslations('social');
+  const common = useTranslations('common');
+  const aspirations = useTranslations('aspirations');
+  const nav = useTranslations('nav');
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const [comment, setComment] = useState('');
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [contributions, setContributions] = useState<ContributionItem[]>([]);
@@ -78,10 +67,7 @@ export function AspirationActions({
 
   async function refreshContributions() {
     try {
-      const response = await apiFetch<{ data: ContributionItem[] }>(
-        `/aspirations/${aspirationId}/contributions`,
-      );
-      setContributions(response.data);
+      setContributions([...(await listContributions(aspirationId))]);
     } catch {
       setContributions([]);
     }
@@ -89,10 +75,7 @@ export function AspirationActions({
 
   async function refreshComments() {
     try {
-      const response = await apiFetch<{ data: CommentItem[] }>(
-        `/aspirations/${aspirationId}/comments?limit=50`,
-      );
-      setComments(response.data);
+      setComments([...(await listComments(aspirationId))]);
     } catch {
       setComments([]);
     }
@@ -100,47 +83,60 @@ export function AspirationActions({
 
   useEffect(() => {
     void apiFetch<{ data: { id: string } }>('/me')
-      .then((response) => setCurrentUserId(response.data.id))
-      .catch(() => setCurrentUserId(null));
+      .then((response) => {
+        setCurrentUserId(response.data.id);
+        setAuthChecked(true);
+      })
+      .catch(() => {
+        setCurrentUserId(null);
+        setAuthChecked(true);
+      });
     void refreshContributions();
     void refreshComments();
   }, [aspirationId]);
 
-  async function support() {
+  async function runAction(action: () => Promise<void>, successMessage: string) {
+    setBusy(true);
+    setMessage(null);
     try {
-      await apiFetch(`/aspirations/${aspirationId}/support`, { method: 'POST', body: '{}' });
-      setMessage('Merci pour votre soutien.');
+      await action();
+      setMessage(successMessage);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Action impossible');
+      setMessage(error instanceof Error ? error.message : common('errorGeneric'));
+    } finally {
+      setBusy(false);
     }
+  }
+
+  async function support() {
+    await runAction(
+      () => apiFetch(`/aspirations/${aspirationId}/support`, { method: 'POST', body: '{}' }),
+      t('supportThanks'),
+    );
   }
 
   async function save() {
-    try {
-      await apiFetch(`/aspirations/${aspirationId}/save`, { method: 'POST', body: '{}' });
-      setMessage('Aspiration enregistrée.');
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Action impossible');
-    }
+    await runAction(
+      () => apiFetch(`/aspirations/${aspirationId}/save`, { method: 'POST', body: '{}' }),
+      t('saved'),
+    );
   }
 
   async function followOwner(targetId: string) {
-    try {
-      await apiFetch(`/users/${targetId}/follow`, { method: 'POST', body: '{}' });
-      setMessage('Vous suivez désormais ce porteur.');
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Action impossible');
-    }
+    await runAction(
+      () => apiFetch(`/users/${targetId}/follow`, { method: 'POST', body: '{}' }),
+      t('followed'),
+    );
   }
 
   async function proposeHelp(event: React.FormEvent) {
     event.preventDefault();
     if (proposeDescription.trim().length < 10) {
-      setMessage('Décrivez votre aide en au moins 10 caractères.');
+      setMessage(t('proposeMinLength'));
       return;
     }
 
-    try {
+    await runAction(async () => {
       await apiFetch(`/aspirations/${aspirationId}/contributions`, {
         method: 'POST',
         body: JSON.stringify({
@@ -149,37 +145,36 @@ export function AspirationActions({
           needId: proposeNeedId || null,
         }),
       });
-      setMessage('Contribution proposée. Le porteur pourra l’accepter.');
       setShowPropose(false);
       setProposeDescription('');
       await refreshContributions();
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Action impossible');
-    }
+    }, t('proposeSuccess'));
   }
 
   async function transition(id: string, to: string) {
-    try {
-      const result = await apiFetch<{ data: { conversationId: string | null } }>(
-        `/contributions/${id}/transitions`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ to }),
-        },
-      );
-      setMessage(`Contribution → ${to}`);
-      await refreshContributions();
-      if (result.data.conversationId) {
-        setMessage(`Contribution → ${to}. Conversation ouverte.`);
-      }
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Transition impossible');
-    }
+    await runAction(
+      async () => {
+        const result = await apiFetch<{ data: { conversationId: string | null } }>(
+          `/contributions/${id}/transitions`,
+          {
+            method: 'POST',
+            body: JSON.stringify({ to }),
+          },
+        );
+        await refreshContributions();
+        if (result.data.conversationId) {
+          setMessage(t('transitionWithConversation', { status: to }));
+        } else {
+          setMessage(t('transitionSimple', { status: to }));
+        }
+      },
+      t('transitionSimple', { status: to }),
+    );
   }
 
   async function report(event: React.FormEvent) {
     event.preventDefault();
-    try {
+    await runAction(async () => {
       await apiFetch('/reports', {
         method: 'POST',
         body: JSON.stringify({
@@ -189,12 +184,9 @@ export function AspirationActions({
           details: reportDetails.trim() || null,
         }),
       });
-      setMessage('Signalement envoyé.');
       setShowReport(false);
       setReportDetails('');
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Signalement impossible');
-    }
+    }, t('reportSuccess'));
   }
 
   async function submitComment() {
@@ -202,17 +194,14 @@ export function AspirationActions({
       return;
     }
 
-    try {
+    await runAction(async () => {
       await apiFetch(`/aspirations/${aspirationId}/comments`, {
         method: 'POST',
         body: JSON.stringify({ body: comment.trim(), parentId: null }),
       });
       setComment('');
-      setMessage('Commentaire publié.');
       await refreshComments();
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Commentaire impossible');
-    }
+    }, t('commentSuccess'));
   }
 
   const isOwner = currentUserId !== null && currentUserId === ownerId;
@@ -230,174 +219,195 @@ export function AspirationActions({
       (currentUserId === item.contributorId && item.completedByOwnerAt);
 
     if (meConfirmed && !otherConfirmed) {
-      return 'En attente de la confirmation de l’autre partie.';
+      return t('waitingOther');
     }
     if (!meConfirmed && otherConfirmed) {
-      return 'L’autre partie a confirmé. À votre tour.';
+      return t('waitingYou');
     }
     return null;
   }
 
   return (
-    <div className="mt-6 space-y-4">
-      <div className="flex flex-wrap gap-3">
-        <Link href={`/users/${ownerId}`}>
-          <Button variant="ghost">Voir le porteur</Button>
-        </Link>
-        {!isOwner ? (
-          <Button variant="ghost" onClick={() => followOwner(ownerId)}>
-            Suivre le porteur
+    <div className="space-y-6">
+      {!authChecked ? null : currentUserId ? (
+        <div className="flex flex-wrap gap-3 rounded-[var(--dc-radius-lg)] border border-[var(--dc-color-border)] bg-[var(--dc-color-surface-muted)] p-4">
+          <Link href={`/users/${ownerId}`}>
+            <Button variant="ghost" disabled={busy}>
+              {aspirations('viewOwner')}
+            </Button>
+          </Link>
+          {!isOwner ? (
+            <Button variant="ghost" disabled={busy} onClick={() => void followOwner(ownerId)}>
+              {social('follow')}
+            </Button>
+          ) : null}
+          <Button disabled={busy} onClick={() => void support()}>
+            {common('support')}
           </Button>
-        ) : null}
-        <Button onClick={support}>Je soutiens</Button>
-        {canPropose ? (
-          <Button variant="secondary" onClick={() => setShowPropose((value) => !value)}>
-            Proposer mon aide
+          {canPropose ? (
+            <Button
+              variant="secondary"
+              disabled={busy}
+              onClick={() => setShowPropose((value) => !value)}
+            >
+              {aspirations('proposeHelp')}
+            </Button>
+          ) : null}
+          <Button variant="ghost" disabled={busy} onClick={() => void save()}>
+            {social('save')}
           </Button>
-        ) : null}
-        <Button variant="ghost" onClick={save}>
-          Enregistrer
-        </Button>
-        <Button variant="ghost" onClick={() => setShowReport((value) => !value)}>
-          Signaler
-        </Button>
-      </div>
+          <Button variant="ghost" disabled={busy} onClick={() => setShowReport((value) => !value)}>
+            {social('report')}
+          </Button>
+        </div>
+      ) : (
+        <Alert variant="info">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p>{aspirations('loginToAct')}</p>
+            <Link href="/auth/login">
+              <Button size="sm">{nav('login')}</Button>
+            </Link>
+          </div>
+        </Alert>
+      )}
 
       {showPropose ? (
-        <form
-          onSubmit={proposeHelp}
-          className="space-y-3 rounded-[var(--dc-radius-md)] border border-[var(--dc-color-border)] p-4"
-        >
-          <h3 className="font-medium">Proposer une contribution</h3>
-          <label className="block text-sm">
-            Type
-            <select
-              className="mt-1 w-full rounded-[var(--dc-radius-md)] border border-[var(--dc-color-border)] px-3 py-2"
-              value={proposeType}
-              onChange={(event) =>
-                setProposeType(event.target.value as (typeof CONTRIBUTION_TYPES)[number])
-              }
-            >
-              {CONTRIBUTION_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm">
-            Besoin concerné (optionnel)
-            <select
-              className="mt-1 w-full rounded-[var(--dc-radius-md)] border border-[var(--dc-color-border)] px-3 py-2"
-              value={proposeNeedId}
-              onChange={(event) => setProposeNeedId(event.target.value)}
-            >
-              <option value="">Aucun besoin précis</option>
-              {needs.map((need) => (
-                <option key={need.id} value={need.id}>
-                  {need.title} · {need.needType}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm">
-            Description
-            <textarea
-              className="mt-1 w-full rounded-[var(--dc-radius-md)] border border-[var(--dc-color-border)] px-3 py-2"
-              rows={4}
-              value={proposeDescription}
-              onChange={(event) => setProposeDescription(event.target.value)}
-              required
-              minLength={10}
-            />
-          </label>
-          <Button type="submit">Envoyer la proposition</Button>
-        </form>
+        <Card className="space-y-3">
+          <form onSubmit={(event) => void proposeHelp(event)} className="space-y-3">
+            <h3 className="font-semibold">{aspirations('proposeHelp')}</h3>
+            <Field label={t('type')} htmlFor="propose-type">
+              <Select
+                id="propose-type"
+                value={proposeType}
+                disabled={busy}
+                onChange={(event) =>
+                  setProposeType(event.target.value as (typeof CONTRIBUTION_TYPES)[number])
+                }
+              >
+                {CONTRIBUTION_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label={t('needOptional')} htmlFor="propose-need">
+              <Select
+                id="propose-need"
+                value={proposeNeedId}
+                disabled={busy}
+                onChange={(event) => setProposeNeedId(event.target.value)}
+              >
+                <option value="">{t('needNone')}</option>
+                {needs.map((need) => (
+                  <option key={need.id} value={need.id}>
+                    {need.title} · {need.needType}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label={t('description')} htmlFor="propose-description">
+              <Textarea
+                id="propose-description"
+                rows={4}
+                value={proposeDescription}
+                disabled={busy}
+                onChange={(event) => setProposeDescription(event.target.value)}
+                required
+                minLength={10}
+              />
+            </Field>
+            <Button type="submit" disabled={busy}>
+              {t('sendProposal')}
+            </Button>
+          </form>
+        </Card>
       ) : null}
 
       {showReport ? (
-        <form
-          onSubmit={report}
-          className="space-y-3 rounded-[var(--dc-radius-md)] border border-[var(--dc-color-border)] p-4"
-        >
-          <h3 className="font-medium">Signaler cette aspiration</h3>
-          <label className="block text-sm">
-            Motif
-            <select
-              className="mt-1 w-full rounded-[var(--dc-radius-md)] border border-[var(--dc-color-border)] px-3 py-2"
-              value={reportReason}
-              onChange={(event) =>
-                setReportReason(event.target.value as (typeof REPORT_REASONS)[number])
-              }
-            >
-              {REPORT_REASONS.map((reason) => (
-                <option key={reason} value={reason}>
-                  {reason}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm">
-            Détails (optionnel)
-            <textarea
-              className="mt-1 w-full rounded-[var(--dc-radius-md)] border border-[var(--dc-color-border)] px-3 py-2"
-              rows={3}
-              value={reportDetails}
-              onChange={(event) => setReportDetails(event.target.value)}
-            />
-          </label>
-          <Button type="submit" variant="secondary">
-            Envoyer le signalement
-          </Button>
-        </form>
+        <Card className="space-y-3">
+          <form onSubmit={(event) => void report(event)} className="space-y-3">
+            <h3 className="font-semibold">{social('report')}</h3>
+            <Field label={t('reportReason')} htmlFor="report-reason">
+              <Select
+                id="report-reason"
+                value={reportReason}
+                disabled={busy}
+                onChange={(event) =>
+                  setReportReason(event.target.value as (typeof REPORT_REASONS)[number])
+                }
+              >
+                {REPORT_REASONS.map((reason) => (
+                  <option key={reason} value={reason}>
+                    {reason}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label={t('reportDetails')} htmlFor="report-details">
+              <Textarea
+                id="report-details"
+                rows={3}
+                value={reportDetails}
+                disabled={busy}
+                onChange={(event) => setReportDetails(event.target.value)}
+              />
+            </Field>
+            <Button type="submit" variant="secondary" disabled={busy}>
+              {t('reportSubmit')}
+            </Button>
+          </form>
+        </Card>
       ) : null}
 
-      <div className="space-y-2">
-        <label className="block text-sm">
-          Commentaire
-          <textarea
-            className="mt-1 w-full rounded-[var(--dc-radius-md)] border border-[var(--dc-color-border)] px-3 py-2"
-            rows={3}
-            value={comment}
-            onChange={(event) => setComment(event.target.value)}
-          />
-        </label>
-        <Button variant="secondary" onClick={submitComment}>
-          Publier le commentaire
-        </Button>
-      </div>
+      {currentUserId ? (
+        <Card className="space-y-3">
+          <Field label={social('comment')} htmlFor="comment-body">
+            <Textarea
+              id="comment-body"
+              rows={3}
+              value={comment}
+              disabled={busy}
+              onChange={(event) => setComment(event.target.value)}
+            />
+          </Field>
+          <Button variant="secondary" disabled={busy} onClick={() => void submitComment()}>
+            {social('publishComment')}
+          </Button>
+        </Card>
+      ) : null}
 
-      <div className="space-y-3">
-        <h2 className="text-lg font-medium">Commentaires</h2>
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">{aspirations('commentsTitle')}</h2>
         {comments.length === 0 ? (
-          <p className="text-sm text-[var(--dc-color-muted)]">Aucun commentaire pour le moment.</p>
+          <p className="text-sm text-[var(--dc-color-muted)]">{aspirations('commentsEmpty')}</p>
         ) : (
           comments.map((item) => (
             <div
               key={item.id}
-              className="rounded-[var(--dc-radius-md)] border border-[var(--dc-color-border)] p-3"
+              className="rounded-[var(--dc-radius-md)] border border-[var(--dc-color-border)] bg-[var(--dc-color-surface)] p-3"
             >
               <p className="text-sm">
                 <Link
                   href={`/users/${item.authorUsername}`}
-                  className="font-medium text-[var(--dc-color-primary)]"
+                  className="font-medium text-[var(--dc-color-primary)] hover:underline"
                 >
                   {item.authorDisplayName}
                 </Link>
                 <span className="text-[var(--dc-color-muted)]">
                   {' '}
-                  · {new Date(item.createdAt).toLocaleString('fr-FR')}
+                  · {formatRelativeDate(item.createdAt)}
                 </span>
               </p>
-              <p className="mt-1 text-sm whitespace-pre-wrap">{item.body}</p>
+              <p className="mt-1 whitespace-pre-wrap text-sm">{item.body}</p>
             </div>
           ))
         )}
-      </div>
+      </section>
 
       {contributions.length > 0 ? (
-        <div className="space-y-3">
-          <h2 className="text-lg font-medium">Contributions</h2>
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">{aspirations('contributionsTitle')}</h2>
           {contributions.map((item) => {
             const actorIsOwner = currentUserId === item.ownerId;
             const actorIsContributor = currentUserId === item.contributorId;
@@ -408,62 +418,103 @@ export function AspirationActions({
                 (actorIsContributor && !item.completedByContributorAt));
 
             return (
-              <div
-                key={item.id}
-                className="rounded-[var(--dc-radius-md)] border border-[var(--dc-color-border)] p-3"
-              >
-                <p className="text-sm font-medium">
-                  {item.contributionType} · {item.status}
-                </p>
-                <p className="mt-1 text-sm text-[var(--dc-color-muted)]">{item.description}</p>
+              <Card key={item.id} className="space-y-3 p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-medium">{item.contributionType}</p>
+                  <Badge variant="primary">{contributionStatusLabel(item.status)}</Badge>
+                  <span className="sr-only">
+                    {item.contributionType} · {item.status}
+                  </span>
+                </div>
+                <p className="text-sm text-[var(--dc-color-muted)]">{item.description}</p>
                 {confirmHint ? (
-                  <p className="mt-2 text-sm text-[var(--dc-color-primary)]">{confirmHint}</p>
+                  <p className="text-sm text-[var(--dc-color-primary)]">{confirmHint}</p>
                 ) : null}
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                   {item.status === 'proposed' && actorIsOwner ? (
                     <>
-                      <Button size="sm" onClick={() => transition(item.id, 'accepted')}>
-                        Accepter
+                      <Button
+                        size="sm"
+                        disabled={busy}
+                        onClick={() => void transition(item.id, 'accepted')}
+                      >
+                        {t('accept')}
                       </Button>
                       <Button
                         size="sm"
                         variant="secondary"
-                        onClick={() => transition(item.id, 'declined')}
+                        disabled={busy}
+                        onClick={() => void transition(item.id, 'declined')}
                       >
-                        Refuser
+                        {t('decline')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={busy}
+                        onClick={() => void transition(item.id, 'in_discussion')}
+                      >
+                        {aspirations('discuss')}
+                      </Button>
+                    </>
+                  ) : null}
+                  {item.status === 'in_discussion' && actorIsOwner ? (
+                    <>
+                      <Button
+                        size="sm"
+                        disabled={busy}
+                        onClick={() => void transition(item.id, 'accepted')}
+                      >
+                        {t('accept')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={busy}
+                        onClick={() => void transition(item.id, 'declined')}
+                      >
+                        {t('decline')}
                       </Button>
                     </>
                   ) : null}
                   {item.status === 'accepted' && (actorIsOwner || actorIsContributor) ? (
-                    <Button size="sm" onClick={() => transition(item.id, 'in_progress')}>
-                      Démarrer
+                    <Button
+                      size="sm"
+                      disabled={busy}
+                      onClick={() => void transition(item.id, 'in_progress')}
+                    >
+                      {t('start')}
                     </Button>
                   ) : null}
                   {canConfirm ? (
-                    <Button size="sm" onClick={() => transition(item.id, 'completed')}>
-                      Confirmer la réalisation
+                    <Button
+                      size="sm"
+                      disabled={busy}
+                      onClick={() => void transition(item.id, 'completed')}
+                    >
+                      {t('confirm')}
                     </Button>
                   ) : null}
                   {item.conversationId ? (
                     <Link href={`/conversations/${item.conversationId}`}>
                       <Button size="sm" variant="ghost">
-                        Conversation
+                        {t('conversation')}
                       </Button>
                     </Link>
                   ) : null}
                   <Link href={`/users/${item.contributorId}`}>
                     <Button size="sm" variant="ghost">
-                      Profil contributeur
+                      {aspirations('contributorProfile')}
                     </Button>
                   </Link>
                 </div>
-              </div>
+              </Card>
             );
           })}
-        </div>
+        </section>
       ) : null}
 
-      {message ? <p className="w-full text-sm text-[var(--dc-color-muted)]">{message}</p> : null}
+      {message ? <Alert variant="info">{message}</Alert> : null}
     </div>
   );
 }

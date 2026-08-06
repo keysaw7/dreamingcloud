@@ -11,10 +11,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@dreamingcloud/contracts": "workspace:*",
     "@dreamingcloud/design-tokens": "workspace:*",
     "@dreamingcloud/ui": "workspace:*",
-    "@tanstack/react-query": "^5.101.4",
-    "motion": "^12.43.0",
     "next": "^16.3.0",
     "next-intl": "^4.13.5",
     "react": "^19.2.8",

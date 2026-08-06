@@ -1,16 +1,24 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@dreamingcloud/ui';
+import { useTranslations } from 'next-intl';
+import { useState } from 'react';
+import { Alert, Button } from '@dreamingcloud/ui';
 
 import { apiFetch } from '../../lib/api';
+import { logout } from '../../lib/api/auth';
 
 export function AccountActions() {
   const router = useRouter();
+  const common = useTranslations('common');
   const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   async function exportData() {
+    setBusy(true);
+    setError(null);
+    setMessage(null);
     try {
       const response = await apiFetch<{ data: unknown }>('/me/export');
       const blob = new Blob([JSON.stringify(response.data, null, 2)], {
@@ -23,17 +31,22 @@ export function AccountActions() {
       anchor.click();
       URL.revokeObjectURL(url);
       setMessage('Export téléchargé.');
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Export impossible');
+    } catch (exportError) {
+      setError(exportError instanceof Error ? exportError.message : 'Export impossible');
+    } finally {
+      setBusy(false);
     }
   }
 
-  async function logout() {
+  async function onLogout() {
+    setBusy(true);
     try {
-      await apiFetch('/auth/logout', { method: 'POST', body: '{}' });
+      await logout();
       router.push('/auth/login');
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Déconnexion impossible');
+      router.refresh();
+    } catch (logoutError) {
+      setError(logoutError instanceof Error ? logoutError.message : 'Déconnexion impossible');
+      setBusy(false);
     }
   }
 
@@ -42,28 +55,33 @@ export function AccountActions() {
       return;
     }
 
+    setBusy(true);
+    setError(null);
     try {
       await apiFetch('/me', { method: 'DELETE' });
       router.push('/');
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Suppression impossible');
+      router.refresh();
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Suppression impossible');
+      setBusy(false);
     }
   }
 
   return (
     <div className="mt-6 space-y-3 border-t border-[var(--dc-color-border)] pt-6">
       <div className="flex flex-wrap gap-3">
-        <Button variant="secondary" onClick={exportData}>
+        <Button variant="secondary" disabled={busy} onClick={() => void exportData()}>
           Exporter mes données
         </Button>
-        <Button variant="ghost" onClick={logout}>
-          Se déconnecter
+        <Button variant="ghost" disabled={busy} onClick={() => void onLogout()}>
+          {common('logout')}
         </Button>
-        <Button variant="ghost" onClick={deleteAccount}>
+        <Button variant="ghost" disabled={busy} onClick={() => void deleteAccount()}>
           Supprimer mon compte
         </Button>
       </div>
-      {message ? <p className="text-sm text-[var(--dc-color-muted)]">{message}</p> : null}
+      {error ? <Alert variant="danger">{error}</Alert> : null}
+      {message ? <Alert variant="success">{message}</Alert> : null}
     </div>
   );
 }

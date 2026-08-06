@@ -1,56 +1,62 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { Button, Card } from '@dreamingcloud/ui';
+import { Alert, Button, Card, Field, Input, PageShell } from '@dreamingcloud/ui';
 
-import { apiFetch } from '../../../lib/api';
+import { requestPasswordReset } from '../../../lib/api/auth';
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations('auth');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
     setMessage(null);
+    setBusy(true);
     try {
-      await apiFetch('/auth/request-password-reset', {
-        method: 'POST',
-        body: JSON.stringify({ email }),
-      });
-      setMessage('Si un compte existe, un e-mail de réinitialisation a été envoyé.');
+      await requestPasswordReset(email);
+      setMessage(t('forgotSuccess'));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Demande impossible');
+    } finally {
+      setBusy(false);
     }
   }
 
   return (
-    <main className="mx-auto max-w-md px-6 py-16">
+    <PageShell maxWidth="sm">
       <Card>
-        <h1 className="text-2xl font-semibold">Mot de passe oublié</h1>
+        <h1 className="text-2xl font-semibold">{t('forgotTitle')}</h1>
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-          <label className="block text-sm">
-            E-mail
-            <input
-              className="mt-1 w-full rounded-[var(--dc-radius-md)] border border-[var(--dc-color-border)] px-3 py-2"
+          <Field label={t('email')} htmlFor="forgot-email">
+            <Input
+              id="forgot-email"
               type="email"
               value={email}
+              disabled={busy}
               onChange={(event) => setEmail(event.target.value)}
               required
+              autoComplete="email"
             />
-          </label>
-          {error ? <p className="text-sm text-[var(--dc-color-danger)]">{error}</p> : null}
-          {message ? <p className="text-sm text-[var(--dc-color-muted)]">{message}</p> : null}
-          <Button type="submit" className="w-full">
-            Envoyer le lien
+          </Field>
+          {error ? <Alert variant="danger">{error}</Alert> : null}
+          {message ? <Alert variant="success">{message}</Alert> : null}
+          <Button type="submit" className="w-full" disabled={busy}>
+            {t('forgotSubmit')}
           </Button>
         </form>
         <p className="mt-4 text-sm">
-          <Link href="/auth/login">Retour à la connexion</Link>
+          <Link href="/auth/login" className="underline">
+            {t('loginTitle')}
+          </Link>
         </p>
       </Card>
-    </main>
+    </PageShell>
   );
 }

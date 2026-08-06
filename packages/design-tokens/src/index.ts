@@ -8,12 +8,19 @@ export const designTokens = {
     muted: '#65736b',
     border: '#dde5de',
     danger: '#ba1a1a',
+    dangerSoft: '#fcebeb',
+    success: '#1b6b3a',
+    successSoft: '#e8f5ee',
+    warning: '#8a6116',
+    warningSoft: '#faf1de',
+    focus: '#287e50',
   },
   radius: {
     sm: '0.5rem',
     md: '0.75rem',
     lg: '1rem',
     xl: '1.5rem',
+    full: '9999px',
   },
   spacing: {
     1: '0.25rem',
@@ -24,5 +31,18 @@ export const designTokens = {
     8: '2rem',
     12: '3rem',
     16: '4rem',
+  },
+  shadow: {
+    sm: '0 1px 2px rgb(24 39 31 / 0.06)',
+    md: '0 4px 16px rgb(24 39 31 / 0.08)',
+  },
+  font: {
+    sans: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  },
+  width: {
+    sm: '28rem',
+    md: '36rem',
+    lg: '48rem',
+    xl: '64rem',
   },
 } as const;

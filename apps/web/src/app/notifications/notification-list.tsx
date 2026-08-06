@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { Button, Card } from '@dreamingcloud/ui';
+import { Badge, Button, Card, EmptyState } from '@dreamingcloud/ui';
 
 import { apiFetch } from '../../lib/api';
+import { formatRelativeDate } from '../../lib/format';
 
 interface NotificationItem {
   id: string;
@@ -48,6 +50,7 @@ function hrefFor(item: NotificationItem): string | null {
 }
 
 export function NotificationList({ initialItems }: { initialItems: NotificationItem[] }) {
+  const t = useTranslations('notifications');
   const [items, setItems] = useState(initialItems);
 
   async function markRead(id: string) {
@@ -62,11 +65,7 @@ export function NotificationList({ initialItems }: { initialItems: NotificationI
   }
 
   if (items.length === 0) {
-    return (
-      <Card>
-        <p className="text-sm text-[var(--dc-color-muted)]">Aucune notification.</p>
-      </Card>
-    );
+    return <EmptyState title={t('empty')} />;
   }
 
   return (
@@ -76,16 +75,22 @@ export function NotificationList({ initialItems }: { initialItems: NotificationI
         const label = LABELS[item.type] ?? item.type;
         const content = (
           <>
-            <p className="text-sm font-medium">{label}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-semibold">{label}</p>
+              {!item.readAt ? <Badge variant="primary">{t('newBadge')}</Badge> : null}
+            </div>
             <p className="mt-1 text-sm text-[var(--dc-color-muted)]">
-              {new Date(item.createdAt).toLocaleString('fr-FR')}
-              {item.readAt ? ' · lu' : ' · non lu'}
+              {formatRelativeDate(item.createdAt)}
             </p>
           </>
         );
 
         return (
-          <Card key={item.id}>
+          <Card
+            key={item.id}
+            variant="interactive"
+            className={!item.readAt ? 'border-[var(--dc-color-primary)]/30' : undefined}
+          >
             {href ? (
               <Link href={href} onClick={() => void markRead(item.id)} className="block">
                 {content}
@@ -96,7 +101,7 @@ export function NotificationList({ initialItems }: { initialItems: NotificationI
             {!item.readAt ? (
               <div className="mt-3">
                 <Button size="sm" variant="ghost" onClick={() => void markRead(item.id)}>
-                  Marquer comme lu
+                  {t('markRead')}
                 </Button>
               </div>
             ) : null}

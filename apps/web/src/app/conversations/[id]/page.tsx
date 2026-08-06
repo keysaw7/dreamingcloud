@@ -1,48 +1,46 @@
-import { Card } from '@dreamingcloud/ui';
+import { getTranslations } from 'next-intl/server';
+import { Card, PageShell } from '@dreamingcloud/ui';
 
 import { apiFetchServer } from '../../../lib/api-server';
+import { formatRelativeDate } from '../../../lib/format';
+import type { ApiListResponse, MessageItem } from '../../../lib/types';
 import { MessageComposer } from './message-composer';
-
-interface MessagesResponse {
-  data: readonly {
-    id: string;
-    senderId: string;
-    body: string;
-    createdAt: string;
-  }[];
-}
 
 export default async function ConversationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  let messages: MessagesResponse['data'] = [];
+  const t = await getTranslations('conversations');
+  let messages: readonly MessageItem[] = [];
   try {
-    const response = await apiFetchServer<MessagesResponse>(`/conversations/${id}/messages`);
+    const response = await apiFetchServer<ApiListResponse<MessageItem>>(
+      `/conversations/${id}/messages`,
+    );
     messages = response.data;
   } catch {
     messages = [];
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
-      <h1 className="text-2xl font-semibold">Conversation</h1>
-      <Card className="mt-6 space-y-4">
+    <PageShell maxWidth="lg" title={t('threadTitle')} description={t('description')}>
+      <Card className="space-y-4">
         {messages.length === 0 ? (
-          <p className="text-sm text-[var(--dc-color-muted)]">Aucun message pour l’instant.</p>
+          <p className="text-sm text-[var(--dc-color-muted)]">{t('noMessages')}</p>
         ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className="rounded-[var(--dc-radius-md)] bg-[var(--dc-color-canvas)] p-3"
-            >
-              <p className="text-xs text-[var(--dc-color-muted)]">
-                {new Date(message.createdAt).toLocaleString('fr-FR')}
-              </p>
-              <p className="mt-1 whitespace-pre-wrap">{message.body}</p>
-            </div>
-          ))
+          <div className="space-y-3">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className="rounded-[var(--dc-radius-lg)] border border-[var(--dc-color-border)] bg-[var(--dc-color-surface-muted)] p-3"
+              >
+                <p className="text-xs text-[var(--dc-color-muted)]">
+                  {formatRelativeDate(message.createdAt)}
+                </p>
+                <p className="mt-1 whitespace-pre-wrap">{message.body}</p>
+              </div>
+            ))}
+          </div>
         )}
         <MessageComposer conversationId={id} />
       </Card>
-    </main>
+    </PageShell>
   );
 }

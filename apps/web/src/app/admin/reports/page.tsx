@@ -1,89 +1,74 @@
-import Link from 'next/link';
-import { Button, Card } from '@dreamingcloud/ui';
+import { getTranslations } from 'next-intl/server';
+import { Alert, Badge, Card, EmptyState, PageShell } from '@dreamingcloud/ui';
 
+import { AuthGate } from '../../../features/auth/auth-gate';
 import { apiFetchServer } from '../../../lib/api-server';
+import { formatRelativeDate } from '../../../lib/format';
+import { getCurrentUser } from '../../../lib/session';
+import type { ApiListResponse } from '../../../lib/types';
 import { ResolveReportActions } from './resolve-actions';
 
-interface ReportsResponse {
-  data: Array<{
-    id: string;
-    reporterId: string;
-    subjectType: string;
-    subjectId: string;
-    reason: string;
-    details: string | null;
-    status: string;
-    createdAt: string;
-  }>;
-}
-
-interface MeResponse {
-  data: { role?: string };
+interface ReportItem {
+  id: string;
+  reporterId: string;
+  subjectType: string;
+  subjectId: string;
+  reason: string;
+  details: string | null;
+  status: string;
+  createdAt: string;
 }
 
 export default async function AdminReportsPage() {
-  let me: MeResponse['data'] | null = null;
-  try {
-    const response = await apiFetchServer<MeResponse>('/me');
-    me = response.data;
-  } catch {
-    me = null;
-  }
+  const t = await getTranslations('admin');
+  const nav = await getTranslations('nav');
+  const me = await getCurrentUser();
 
   if (!me) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-16">
-        <Card>
-          <p>Connectez-vous pour accéder à la modération.</p>
-          <Link href="/auth/login" className="mt-4 inline-block">
-            <Button>Connexion</Button>
-          </Link>
-        </Card>
-      </main>
+      <PageShell title={t('reportsTitle')} maxWidth="lg">
+        <AuthGate title={t('loginPrompt')} loginLabel={nav('login')} />
+      </PageShell>
     );
   }
 
-  let reports: ReportsResponse['data'] = [];
+  let reports: ReportItem[] = [];
   let error: string | null = null;
   try {
-    const response = await apiFetchServer<ReportsResponse>('/moderation/reports');
-    reports = response.data;
+    const response = await apiFetchServer<ApiListResponse<ReportItem>>('/moderation/reports');
+    reports = [...response.data];
   } catch (err) {
     error = err instanceof Error ? err.message : 'Accès refusé';
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="text-2xl font-semibold">Signalements ouverts</h1>
+    <PageShell title={t('reportsTitle')} maxWidth="lg">
       {error ? (
-        <Card className="mt-6">
-          <p className="text-sm text-[var(--dc-color-danger)]">{error}</p>
-          <p className="mt-2 text-sm text-[var(--dc-color-muted)]">
-            Cette page est réservée aux administrateurs.
-          </p>
-        </Card>
+        <Alert variant="danger">
+          <p className="font-medium">{error}</p>
+          <p className="mt-1">{t('loginPrompt')}</p>
+        </Alert>
+      ) : reports.length === 0 ? (
+        <EmptyState title={t('empty')} />
       ) : (
-        <div className="mt-6 space-y-3">
-          {reports.length === 0 ? (
-            <Card>
-              <p className="text-sm text-[var(--dc-color-muted)]">Aucun signalement ouvert.</p>
-            </Card>
-          ) : (
-            reports.map((report) => (
-              <Card key={report.id}>
-                <p className="text-sm font-medium">
+        <div className="space-y-3">
+          {reports.map((report) => (
+            <Card key={report.id} className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm font-semibold">
                   {report.subjectType} · {report.reason}
                 </p>
-                <p className="mt-1 text-sm text-[var(--dc-color-muted)]">
-                  {report.subjectId} · {new Date(report.createdAt).toLocaleString('fr-FR')}
-                </p>
-                {report.details ? <p className="mt-2 text-sm">{report.details}</p> : null}
-                <ResolveReportActions reportId={report.id} />
-              </Card>
-            ))
-          )}
+                <Badge variant="warning">{report.status}</Badge>
+              </div>
+              <p className="text-sm text-[var(--dc-color-muted)]">
+                {report.subjectId} · {formatRelativeDate(report.createdAt)}
+              </p>
+              {report.details ? <p className="text-sm">{report.details}</p> : null}
+              <ResolveReportActions reportId={report.id} />
+            </Card>
+          ))}
         </div>
       )}
-    </main>
+    </PageShell>
   );
 }

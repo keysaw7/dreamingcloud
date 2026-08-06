@@ -1,11 +1,13 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { Button } from '@dreamingcloud/ui';
+import { Alert, Button } from '@dreamingcloud/ui';
 
 import { apiFetch } from '../../../lib/api';
 
 export function FollowButton({ userId }: { userId: string }) {
+  const social = useTranslations('social');
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -24,10 +26,10 @@ export function FollowButton({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-2">
-      <Button onClick={follow} disabled={busy}>
-        Suivre
+      <Button onClick={() => void follow()} disabled={busy}>
+        {social('follow')}
       </Button>
-      {message ? <p className="text-sm text-[var(--dc-color-muted)]">{message}</p> : null}
+      {message ? <Alert variant="info">{message}</Alert> : null}
     </div>
   );
 }

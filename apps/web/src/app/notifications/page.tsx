@@ -1,43 +1,44 @@
-import Link from 'next/link';
-import { Button, Card } from '@dreamingcloud/ui';
+import { getTranslations } from 'next-intl/server';
+import { PageShell } from '@dreamingcloud/ui';
 
+import { AuthGate } from '../../features/auth/auth-gate';
 import { apiFetchServer } from '../../lib/api-server';
+import { getCurrentUser } from '../../lib/session';
+import type { ApiListResponse } from '../../lib/types';
 import { NotificationList } from './notification-list';
 
-interface NotificationsResponse {
-  data: Array<{
-    id: string;
-    type: string;
-    payload: Record<string, unknown>;
-    readAt: string | null;
-    createdAt: string;
-  }>;
+interface NotificationRow {
+  id: string;
+  type: string;
+  payload: Record<string, unknown>;
+  readAt: string | null;
+  createdAt: string;
 }
 
 export default async function NotificationsPage() {
-  let items: NotificationsResponse['data'] = [];
-  try {
-    const response = await apiFetchServer<NotificationsResponse>('/notifications');
-    items = response.data;
-  } catch {
+  const t = await getTranslations('notifications');
+  const nav = await getTranslations('nav');
+  const user = await getCurrentUser();
+
+  if (!user) {
     return (
-      <main className="mx-auto max-w-2xl px-6 py-16">
-        <Card>
-          <p>Connectez-vous pour voir vos notifications.</p>
-          <Link href="/auth/login" className="mt-4 inline-block">
-            <Button>Connexion</Button>
-          </Link>
-        </Card>
-      </main>
+      <PageShell title={t('title')} maxWidth="lg">
+        <AuthGate title={t('loginPrompt')} loginLabel={nav('login')} />
+      </PageShell>
     );
   }
 
+  let items: NotificationRow[] = [];
+  try {
+    const response = await apiFetchServer<ApiListResponse<NotificationRow>>('/notifications');
+    items = [...response.data];
+  } catch {
+    items = [];
+  }
+
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
-      <h1 className="text-2xl font-semibold">Notifications</h1>
-      <div className="mt-6">
-        <NotificationList initialItems={items} />
-      </div>
-    </main>
+    <PageShell title={t('title')} maxWidth="lg">
+      <NotificationList initialItems={items} />
+    </PageShell>
   );
 }

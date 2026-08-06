@@ -2,13 +2,16 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Suspense, useEffect, useState } from 'react';
-import { Button, Card } from '@dreamingcloud/ui';
+import { Alert, Button, Card, PageShell } from '@dreamingcloud/ui';
 
-import { apiFetch } from '../../../lib/api';
+import { verifyEmail } from '../../../lib/api/auth';
 
 function VerifyEmailInner() {
   const params = useSearchParams();
+  const t = useTranslations('auth');
+  const common = useTranslations('common');
   const token = params.get('token');
   const [status, setStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle');
   const [message, setMessage] = useState<string | null>(null);
@@ -16,20 +19,17 @@ function VerifyEmailInner() {
   useEffect(() => {
     if (!token) {
       setStatus('error');
-      setMessage('Lien de vérification invalide.');
+      setMessage(t('verifyMissingToken'));
       return;
     }
 
     let cancelled = false;
     setStatus('loading');
-    void apiFetch('/auth/verify-email', {
-      method: 'POST',
-      body: JSON.stringify({ token }),
-    })
+    void verifyEmail(token)
       .then(() => {
         if (!cancelled) {
           setStatus('ok');
-          setMessage('Adresse e-mail vérifiée. Vous pouvez vous connecter.');
+          setMessage(t('verifySuccess'));
         }
       })
       .catch((error: unknown) => {
@@ -42,28 +42,39 @@ function VerifyEmailInner() {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [token, t]);
 
   return (
-    <main className="mx-auto max-w-md px-6 py-16">
+    <PageShell maxWidth="sm">
       <Card>
-        <h1 className="text-2xl font-semibold">Vérification e-mail</h1>
-        <p className="mt-4 text-sm text-[var(--dc-color-muted)]">
-          {status === 'loading' ? 'Vérification en cours…' : (message ?? '')}
-        </p>
+        <h1 className="text-2xl font-semibold">{t('verifyTitle')}</h1>
+        <div className="mt-4">
+          {status === 'loading' ? (
+            <p className="text-sm text-[var(--dc-color-muted)]">{common('loading')}</p>
+          ) : null}
+          {status === 'ok' && message ? <Alert variant="success">{message}</Alert> : null}
+          {status === 'error' && message ? <Alert variant="danger">{message}</Alert> : null}
+        </div>
         {status === 'ok' ? (
           <Link href="/auth/login" className="mt-6 inline-block">
-            <Button>Se connecter</Button>
+            <Button>{t('loginSubmit')}</Button>
           </Link>
         ) : null}
       </Card>
-    </main>
+    </PageShell>
   );
 }
 
 export default function VerifyEmailPage() {
+  const common = useTranslations('common');
   return (
-    <Suspense fallback={<main className="mx-auto max-w-md px-6 py-16">Chargement…</main>}>
+    <Suspense
+      fallback={
+        <PageShell maxWidth="sm">
+          <p>{common('loading')}</p>
+        </PageShell>
+      }
+    >
       <VerifyEmailInner />
     </Suspense>
   );

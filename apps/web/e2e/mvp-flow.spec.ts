@@ -8,14 +8,14 @@ async function login(page: Page, email: string) {
   await page.getByLabel('E-mail').fill(email);
   await page.getByLabel('Mot de passe').fill(PASSWORD);
   await page.getByRole('button', { name: 'Se connecter' }).click();
-  await page.waitForURL('**/discover');
+  await page.waitForURL((url) => url.pathname === '/');
 }
 
 test.describe('MVP flow', () => {
   test('home and discover are usable anonymously', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('link', { name: 'DreamingCloud' })).toBeVisible();
-    await page.getByRole('navigation').getByRole('link', { name: 'Découvrir' }).click();
+    await expect(page.getByRole('link', { name: 'DreamingCloud' }).first()).toBeVisible();
+    await page.getByRole('navigation').getByRole('link', { name: 'Découvrir' }).first().click();
     await expect(page.getByRole('heading', { name: 'Découvrir' })).toBeVisible();
   });
 
@@ -37,7 +37,9 @@ test.describe('MVP flow', () => {
       .fill(
         'Ceci est une aspiration de test bout en bout pour valider le parcours MVP DreamingCloud.',
       );
+    await owner.getByRole('button', { name: 'Continuer' }).click();
     await owner.getByPlaceholder('Titre du besoin').fill('Aide technique');
+    await owner.getByRole('button', { name: 'Continuer' }).click();
     await owner.getByRole('button', { name: 'Publier mon rêve' }).click();
     await owner.waitForURL('**/aspirations/**');
     await expect(owner.getByRole('heading', { name: title })).toBeVisible();
@@ -88,7 +90,7 @@ test.describe('MVP flow', () => {
     await page.getByLabel('E-mail').fill('admin@demo.local');
     await page.getByLabel('Mot de passe').fill(PASSWORD);
     await page.getByRole('button', { name: 'Se connecter' }).click();
-    await page.waitForURL('**/discover');
+    await page.waitForURL((url) => url.pathname === '/');
     await page.goto('/admin/reports');
     await expect(page.getByRole('heading', { name: 'Signalements ouverts' })).toBeVisible();
   });

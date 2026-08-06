@@ -2,66 +2,79 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Suspense, useState } from 'react';
-import { Button, Card } from '@dreamingcloud/ui';
+import { Alert, Button, Card, Field, Input, PageShell } from '@dreamingcloud/ui';
 
-import { apiFetch } from '../../../lib/api';
+import { resetPassword } from '../../../lib/api/auth';
 
 function ResetPasswordInner() {
   const params = useSearchParams();
+  const t = useTranslations('auth');
   const token = params.get('token') ?? '';
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
     setMessage(null);
+    setBusy(true);
     try {
-      await apiFetch('/auth/reset-password', {
-        method: 'POST',
-        body: JSON.stringify({ token, password }),
-      });
-      setMessage('Mot de passe mis à jour. Vous pouvez vous connecter.');
+      await resetPassword(token, password);
+      setMessage(t('resetSuccess'));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Réinitialisation impossible');
+    } finally {
+      setBusy(false);
     }
   }
 
   return (
-    <main className="mx-auto max-w-md px-6 py-16">
+    <PageShell maxWidth="sm">
       <Card>
-        <h1 className="text-2xl font-semibold">Nouveau mot de passe</h1>
+        <h1 className="text-2xl font-semibold">{t('resetTitle')}</h1>
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-          <label className="block text-sm">
-            Mot de passe (10 caractères min.)
-            <input
-              className="mt-1 w-full rounded-[var(--dc-radius-md)] border border-[var(--dc-color-border)] px-3 py-2"
+          <Field label={t('password')} htmlFor="reset-password">
+            <Input
+              id="reset-password"
               type="password"
               minLength={10}
               value={password}
+              disabled={busy}
               onChange={(event) => setPassword(event.target.value)}
               required
+              autoComplete="new-password"
             />
-          </label>
-          {error ? <p className="text-sm text-[var(--dc-color-danger)]">{error}</p> : null}
-          {message ? <p className="text-sm text-[var(--dc-color-muted)]">{message}</p> : null}
-          <Button type="submit" className="w-full" disabled={!token}>
-            Enregistrer
+          </Field>
+          {error ? <Alert variant="danger">{error}</Alert> : null}
+          {message ? <Alert variant="success">{message}</Alert> : null}
+          <Button type="submit" className="w-full" disabled={!token || busy}>
+            {t('resetSubmit')}
           </Button>
         </form>
         <p className="mt-4 text-sm">
-          <Link href="/auth/login">Connexion</Link>
+          <Link href="/auth/login" className="underline">
+            {t('loginTitle')}
+          </Link>
         </p>
       </Card>
-    </main>
+    </PageShell>
   );
 }
 
 export default function ResetPasswordPage() {
+  const common = useTranslations('common');
   return (
-    <Suspense fallback={<main className="mx-auto max-w-md px-6 py-16">Chargement…</main>}>
+    <Suspense
+      fallback={
+        <PageShell maxWidth="sm">
+          <p>{common('loading')}</p>
+        </PageShell>
+      }
+    >
       <ResetPasswordInner />
     </Suspense>
   );
