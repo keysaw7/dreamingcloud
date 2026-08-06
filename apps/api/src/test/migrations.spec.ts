@@ -12,6 +12,12 @@ describe('SQL migrations', () => {
   let connectionString = '';
 
   beforeAll(async () => {
+    // CI already provides a migrated Postgres service via DATABASE_URL.
+    if (process.env.CI && process.env.DATABASE_URL) {
+      connectionString = process.env.DATABASE_URL;
+      return;
+    }
+
     if (!process.env.CI && process.env.SKIP_TESTCONTAINERS === '1') {
       return;
     }
