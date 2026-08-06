@@ -18,9 +18,9 @@ export function EmptyState({ title, description, action, icon, className }: Empt
       <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-[var(--dc-radius-full)] bg-[var(--dc-color-primary-soft)] text-[var(--dc-color-primary)]">
         {icon ?? <SparklesIcon />}
       </div>
-      <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+      <h2 className="font-semibold text-lg tracking-tight">{title}</h2>
       {description ? (
-        <p className="mx-auto mt-2 max-w-md text-sm text-[var(--dc-color-muted)]">{description}</p>
+        <p className="mx-auto mt-2 max-w-md text-[var(--dc-color-muted)] text-sm">{description}</p>
       ) : null}
       {action ? <div className="mt-6 flex justify-center">{action}</div> : null}
     </Card>

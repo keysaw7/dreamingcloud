@@ -1,21 +1,17 @@
-import { Card, PageShell } from '@dreamingcloud/ui';
+import { getTranslations } from 'next-intl/server';
+import { PageShell } from '@dreamingcloud/ui';
 
-export default function TermsPage() {
+import { Card } from '../../../components/ui/card';
+
+export default async function TermsPage() {
+  const t = await getTranslations('legal');
+
   return (
-    <PageShell maxWidth="md" title="Conditions d’utilisation">
-      <Card className="space-y-4 text-[var(--dc-color-ink-soft)]">
-        <p>
-          DreamingCloud est une plateforme d’aspirations et de contributions. En créant un compte,
-          vous vous engagez à publier des contenus sincères et respectueux.
-        </p>
-        <p>
-          Les contributions non monétaires sont des engagements entre utilisateurs. La plateforme
-          facilite la mise en relation et n’est pas partie aux engagements privés.
-        </p>
-        <p>
-          Les contenus illicites, trompeurs ou abusifs peuvent être signalés et retirés. Les comptes
-          peuvent être suspendus en cas de violation.
-        </p>
+    <PageShell maxWidth="md" title={t('terms')}>
+      <Card className="space-y-4 border border-border p-6 text-muted-foreground">
+        <p>{t('termsIntro')}</p>
+        <p>{t('termsContributions')}</p>
+        <p>{t('termsModeration')}</p>
       </Card>
     </PageShell>
   );

@@ -9,6 +9,7 @@ import { listComments, listContributions } from '../../../lib/api/aspirations';
 import { apiFetch } from '../../../lib/api';
 import { contributionStatusLabel, formatRelativeDate } from '../../../lib/format';
 import type { CommentItem, ContributionItem } from '../../../lib/types';
+import { useAuthSession } from '../../../features/auth/use-auth-session';
 
 interface NeedItem {
   id: string;
@@ -48,9 +49,11 @@ export function AspirationActions({
   const common = useTranslations('common');
   const aspirations = useTranslations('aspirations');
   const nav = useTranslations('nav');
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const { checked: authChecked, userId: currentUserId } = useAuthSession();
+  const [feedback, setFeedback] = useState<{
+    message: string;
+    variant: 'danger' | 'success';
+  } | null>(null);
   const [busy, setBusy] = useState(false);
   const [comment, setComment] = useState('');
   const [comments, setComments] = useState<CommentItem[]>([]);
@@ -82,27 +85,21 @@ export function AspirationActions({
   }
 
   useEffect(() => {
-    void apiFetch<{ data: { id: string } }>('/me')
-      .then((response) => {
-        setCurrentUserId(response.data.id);
-        setAuthChecked(true);
-      })
-      .catch(() => {
-        setCurrentUserId(null);
-        setAuthChecked(true);
-      });
     void refreshContributions();
     void refreshComments();
   }, [aspirationId]);
 
   async function runAction(action: () => Promise<void>, successMessage: string) {
     setBusy(true);
-    setMessage(null);
+    setFeedback(null);
     try {
       await action();
-      setMessage(successMessage);
+      setFeedback({ message: successMessage, variant: 'success' });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : common('errorGeneric'));
+      setFeedback({
+        message: error instanceof Error ? error.message : common('errorGeneric'),
+        variant: 'danger',
+      });
     } finally {
       setBusy(false);
     }
@@ -132,7 +129,7 @@ export function AspirationActions({
   async function proposeHelp(event: React.FormEvent) {
     event.preventDefault();
     if (proposeDescription.trim().length < 10) {
-      setMessage(t('proposeMinLength'));
+      setFeedback({ message: t('proposeMinLength'), variant: 'danger' });
       return;
     }
 
@@ -163,9 +160,12 @@ export function AspirationActions({
         );
         await refreshContributions();
         if (result.data.conversationId) {
-          setMessage(t('transitionWithConversation', { status: to }));
+          setFeedback({
+            message: t('transitionWithConversation', { status: to }),
+            variant: 'success',
+          });
         } else {
-          setMessage(t('transitionSimple', { status: to }));
+          setFeedback({ message: t('transitionSimple', { status: to }), variant: 'success' });
         }
       },
       t('transitionSimple', { status: to }),
@@ -227,15 +227,22 @@ export function AspirationActions({
     return null;
   }
 
+  if (!authChecked) {
+    return (
+      <div aria-busy="true" className="space-y-3">
+        <div className="h-12 animate-pulse rounded-[var(--dc-radius-lg)] bg-[var(--dc-color-surface-muted)]" />
+        <div className="h-28 animate-pulse rounded-[var(--dc-radius-lg)] bg-[var(--dc-color-surface-muted)]" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {!authChecked ? null : currentUserId ? (
+      {currentUserId ? (
         <div className="flex flex-wrap gap-3 rounded-[var(--dc-radius-lg)] border border-[var(--dc-color-border)] bg-[var(--dc-color-surface-muted)] p-4">
-          <Link href={`/users/${ownerId}`}>
-            <Button variant="ghost" disabled={busy}>
-              {aspirations('viewOwner')}
-            </Button>
-          </Link>
+          <Button asChild variant="ghost" disabled={busy}>
+            <Link href={`/users/${ownerId}`}>{aspirations('viewOwner')}</Link>
+          </Button>
           {!isOwner ? (
             <Button variant="ghost" disabled={busy} onClick={() => void followOwner(ownerId)}>
               {social('follow')}
@@ -264,15 +271,15 @@ export function AspirationActions({
         <Alert variant="info">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p>{aspirations('loginToAct')}</p>
-            <Link href="/auth/login">
-              <Button size="sm">{nav('login')}</Button>
-            </Link>
+            <Button asChild size="sm">
+              <Link href="/auth/login">{nav('login')}</Link>
+            </Button>
           </div>
         </Alert>
       )}
 
       {showPropose ? (
-        <Card className="space-y-3">
+        <Card className="space-y-3 p-6">
           <form onSubmit={(event) => void proposeHelp(event)} className="space-y-3">
             <h3 className="font-semibold">{aspirations('proposeHelp')}</h3>
             <Field label={t('type')} htmlFor="propose-type">
@@ -325,7 +332,7 @@ export function AspirationActions({
       ) : null}
 
       {showReport ? (
-        <Card className="space-y-3">
+        <Card className="space-y-3 p-6">
           <form onSubmit={(event) => void report(event)} className="space-y-3">
             <h3 className="font-semibold">{social('report')}</h3>
             <Field label={t('reportReason')} htmlFor="report-reason">
@@ -361,7 +368,7 @@ export function AspirationActions({
       ) : null}
 
       {currentUserId ? (
-        <Card className="space-y-3">
+        <Card className="space-y-3 p-6">
           <Field label={social('comment')} htmlFor="comment-body">
             <Textarea
               id="comment-body"
@@ -378,9 +385,9 @@ export function AspirationActions({
       ) : null}
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">{aspirations('commentsTitle')}</h2>
+        <h2 className="font-semibold text-lg">{aspirations('commentsTitle')}</h2>
         {comments.length === 0 ? (
-          <p className="text-sm text-[var(--dc-color-muted)]">{aspirations('commentsEmpty')}</p>
+          <p className="text-[var(--dc-color-muted)] text-sm">{aspirations('commentsEmpty')}</p>
         ) : (
           comments.map((item) => (
             <div
@@ -407,7 +414,7 @@ export function AspirationActions({
 
       {contributions.length > 0 ? (
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">{aspirations('contributionsTitle')}</h2>
+          <h2 className="font-semibold text-lg">{aspirations('contributionsTitle')}</h2>
           {contributions.map((item) => {
             const actorIsOwner = currentUserId === item.ownerId;
             const actorIsContributor = currentUserId === item.contributorId;
@@ -420,15 +427,15 @@ export function AspirationActions({
             return (
               <Card key={item.id} className="space-y-3 p-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-medium">{item.contributionType}</p>
+                  <p className="font-medium text-sm">{item.contributionType}</p>
                   <Badge variant="primary">{contributionStatusLabel(item.status)}</Badge>
                   <span className="sr-only">
                     {item.contributionType} · {item.status}
                   </span>
                 </div>
-                <p className="text-sm text-[var(--dc-color-muted)]">{item.description}</p>
+                <p className="text-[var(--dc-color-muted)] text-sm">{item.description}</p>
                 {confirmHint ? (
-                  <p className="text-sm text-[var(--dc-color-primary)]">{confirmHint}</p>
+                  <p className="text-[var(--dc-color-primary)] text-sm">{confirmHint}</p>
                 ) : null}
                 <div className="flex flex-wrap gap-2">
                   {item.status === 'proposed' && actorIsOwner ? (
@@ -496,17 +503,17 @@ export function AspirationActions({
                     </Button>
                   ) : null}
                   {item.conversationId ? (
-                    <Link href={`/conversations/${item.conversationId}`}>
-                      <Button size="sm" variant="ghost">
+                    <Button asChild size="sm" variant="ghost">
+                      <Link href={`/conversations/${item.conversationId}`}>
                         {t('conversation')}
-                      </Button>
-                    </Link>
-                  ) : null}
-                  <Link href={`/users/${item.contributorId}`}>
-                    <Button size="sm" variant="ghost">
-                      {aspirations('contributorProfile')}
+                      </Link>
                     </Button>
-                  </Link>
+                  ) : null}
+                  <Button asChild size="sm" variant="ghost">
+                    <Link href={`/users/${item.contributorId}`}>
+                      {aspirations('contributorProfile')}
+                    </Link>
+                  </Button>
                 </div>
               </Card>
             );
@@ -514,7 +521,7 @@ export function AspirationActions({
         </section>
       ) : null}
 
-      {message ? <Alert variant="info">{message}</Alert> : null}
+      {feedback ? <Alert variant={feedback.variant}>{feedback.message}</Alert> : null}
     </div>
   );
 }

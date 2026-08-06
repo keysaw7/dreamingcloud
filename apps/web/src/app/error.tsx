@@ -1,8 +1,11 @@
 'use client';
 
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { Alert, Button, PageShell } from '@dreamingcloud/ui';
+import { PageShell } from '@dreamingcloud/ui';
 
+import { Alert } from '../components/ui/alert';
+import { Button } from '../components/ui/button';
 export default function ErrorPage({
   reset,
 }: {
@@ -12,15 +15,14 @@ export default function ErrorPage({
   const t = useTranslations('common');
 
   return (
-    <PageShell maxWidth="md">
-      <Alert variant="danger">
-        <p className="font-medium">{t('errorTitle')}</p>
-        <p className="mt-1">{t('errorGeneric')}</p>
-      </Alert>
+    <PageShell maxWidth="md" title={t('errorTitle')}>
+      <Alert variant="destructive">{t('errorGeneric')}</Alert>
       <div className="mt-6 flex flex-wrap gap-3">
-        <Button onClick={reset}>{t('retry')}</Button>
-        <Button variant="secondary" onClick={() => (window.location.href = '/')}>
-          {t('backHome')}
+        <Button type="button" onClick={reset}>
+          {t('retry')}
+        </Button>
+        <Button asChild variant="secondary">
+          <Link href="/">{t('backHome')}</Link>
         </Button>
       </div>
     </PageShell>

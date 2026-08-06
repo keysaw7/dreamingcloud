@@ -1,19 +1,26 @@
 'use client';
 
+import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { Avatar, Badge, Card, Progress } from '@dreamingcloud/ui';
 
+import { Card } from '../../components/ui/card';
 import { formatRelativeDate, needTypeLabel } from '../../lib/format';
 import type { AspirationListItem } from '../../lib/types';
+
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
+}
 
 export function AspirationCard({
   item,
   progressLabel,
-}: {
-  item: AspirationListItem;
-  progressLabel?: string;
-}) {
+}: Readonly<{ item: AspirationListItem; progressLabel?: string }>) {
   const t = useTranslations('aspirations');
   const common = useTranslations('common');
   const resolvedProgress = progressLabel ?? t('progress');
@@ -27,67 +34,71 @@ export function AspirationCard({
     : item.ownerId
       ? `/users/${item.ownerId}`
       : null;
+  const progress = Math.max(0, Math.min(item.progressPercent ?? 0, 100));
 
   return (
-    <Card variant="interactive" className="overflow-hidden p-0">
-      <div className="flex items-start gap-3 border-b border-[var(--dc-color-border)] px-5 py-4">
+    <Card className="group overflow-hidden border border-border transition-colors hover:border-primary/35">
+      <div className="flex items-center gap-3 border-border border-b px-5 py-4">
         {ownerHref ? (
-          <Link href={ownerHref} className="shrink-0" aria-label={ownerName}>
-            <Avatar name={ownerName} size="md" />
+          <Link
+            aria-label={ownerName}
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-accent font-semibold text-accent-foreground text-sm"
+            href={ownerHref}
+          >
+            {initials(ownerName)}
           </Link>
         ) : (
-          <Avatar name={ownerName} size="md" />
+          <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-accent font-semibold text-accent-foreground text-sm">
+            {initials(ownerName)}
+          </span>
         )}
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            {ownerHref ? (
-              <Link href={ownerHref} className="truncate text-sm font-semibold hover:underline">
-                {ownerName}
-              </Link>
-            ) : (
-              <p className="truncate text-sm font-semibold">{ownerName}</p>
-            )}
-            {item.ownerUsername ? (
-              <span className="truncate text-sm text-[var(--dc-color-muted)]">
-                @{item.ownerUsername}
-              </span>
-            ) : null}
-            {item.publishedAt ? (
-              <span className="text-sm text-[var(--dc-color-muted)]">
-                · {formatRelativeDate(item.publishedAt)}
-              </span>
-            ) : null}
-          </div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {typeof item.progressPercent === 'number' ? (
-              <Badge variant="primary">
-                {resolvedProgress} {item.progressPercent}%
-              </Badge>
-            ) : null}
-          </div>
+        <div className="min-w-0">
+          {ownerHref ? (
+            <Link className="block truncate font-semibold text-sm hover:underline" href={ownerHref}>
+              {ownerName}
+            </Link>
+          ) : (
+            <p className="truncate font-semibold text-sm">{ownerName}</p>
+          )}
+          <p className="truncate text-muted-foreground text-xs">
+            {item.ownerUsername ? `@${item.ownerUsername}` : null}
+            {item.ownerUsername && item.publishedAt ? ' · ' : null}
+            {item.publishedAt ? formatRelativeDate(item.publishedAt) : null}
+          </p>
         </div>
       </div>
-
-      <Link href={href} className="block px-5 py-4">
-        <h2 className="text-xl font-semibold tracking-tight text-[var(--dc-color-ink)]">
-          {item.title}
-        </h2>
-        <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[var(--dc-color-muted)]">
+      <Link className="block px-5 py-5" href={href}>
+        <div className="flex items-start justify-between gap-4">
+          <h2 className="font-semibold text-xl tracking-tight transition-colors group-hover:text-primary">
+            {item.title}
+          </h2>
+          <ArrowUpRight
+            aria-hidden="true"
+            className="mt-1 shrink-0 text-muted-foreground"
+            size={18}
+          />
+        </div>
+        <p className="mt-3 line-clamp-3 text-muted-foreground text-sm leading-relaxed">
           {item.story}
         </p>
-        {typeof item.progressPercent === 'number' ? (
-          <Progress className="mt-5" value={item.progressPercent} label={resolvedProgress} />
-        ) : null}
+        <div className="mt-6">
+          <div className="mb-2 flex items-center justify-between font-medium text-muted-foreground text-xs">
+            <span>{resolvedProgress}</span>
+            <span>{progress}%</span>
+          </div>
+          <progress
+            aria-label={`${resolvedProgress}: ${progress}%`}
+            className="h-1.5 w-full overflow-hidden rounded-full accent-primary"
+            max={100}
+            value={progress}
+          />
+        </div>
       </Link>
-
-      <div className="flex items-center justify-between gap-3 border-t border-[var(--dc-color-border)] bg-[var(--dc-color-surface-muted)] px-5 py-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-[var(--dc-color-muted)]">
+      <div className="flex items-center justify-between border-border border-t bg-muted/50 px-5 py-3">
+        <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
           {common('openContribution')}
         </p>
-        <Link
-          href={href}
-          className="text-sm font-semibold text-[var(--dc-color-primary)] hover:underline"
-        >
+        <Link className="font-semibold text-primary text-sm hover:underline" href={href}>
           {common('viewDream')}
         </Link>
       </div>
@@ -95,6 +106,10 @@ export function AspirationCard({
   );
 }
 
-export function NeedBadge({ needType }: { needType: string }) {
-  return <Badge>{needTypeLabel(needType)}</Badge>;
+export function NeedBadge({ needType }: Readonly<{ needType: string }>) {
+  return (
+    <span className="rounded-full bg-muted px-2.5 py-1 font-medium text-xs">
+      {needTypeLabel(needType)}
+    </span>
+  );
 }

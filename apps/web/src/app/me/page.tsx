@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import { Avatar, Badge, Button, Card, PageShell, Separator } from '@dreamingcloud/ui';
+import { PageShell, Separator } from '@dreamingcloud/ui';
 
+import { ProfileHero } from '../../components/profile-hero';
+import { Button } from '../../components/ui/button';
 import { AuthGate } from '../../features/auth/auth-gate';
 import { getCurrentUser } from '../../lib/session';
 import { AccountActions } from './account-actions';
@@ -24,56 +26,51 @@ export default async function MePage() {
 
   return (
     <PageShell maxWidth="md" title={t('title')}>
-      <Card variant="flush" className="overflow-hidden">
-        <div className="bg-[linear-gradient(135deg,var(--dc-color-primary-soft),var(--dc-color-surface))] px-6 py-6">
-          <div className="flex flex-wrap items-start gap-4">
-            <Avatar name={me.displayName} size="xl" />
-            <div className="min-w-0 flex-1">
-              <h2 className="text-2xl font-semibold tracking-tight">{me.displayName}</h2>
-              <p className="mt-1 text-sm text-[var(--dc-color-muted)]">@{me.username}</p>
-              <p className="mt-3 whitespace-pre-wrap text-[var(--dc-color-ink-soft)]">
-                {me.bio ?? t('noBio')}
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Badge variant="primary">
-                  {t('status')} : {me.status}
-                </Badge>
-                {me.role === 'admin' ? <Badge variant="warning">{nav('admin')}</Badge> : null}
-              </div>
-            </div>
-          </div>
+      <ProfileHero displayName={me.displayName} headingLevel="h2" username={me.username}>
+        <p className="mt-4 whitespace-pre-wrap text-muted-foreground leading-relaxed">
+          {me.bio ?? t('noBio')}
+        </p>
+        <div className="mt-5 flex flex-wrap gap-2 text-sm">
+          <span className="rounded-full bg-accent px-3 py-1 font-medium text-accent-foreground">
+            {t('status')}: {me.status}
+          </span>
+          {me.role === 'admin' ? (
+            <span className="rounded-full bg-warning/15 px-3 py-1 font-medium text-warning-foreground">
+              {nav('admin')}
+            </span>
+          ) : null}
         </div>
-
-        <div className="space-y-6 px-6 py-6">
-          <div className="flex flex-wrap gap-3">
-            <Link href={`/users/${me.username}`}>
-              <Button variant="secondary">{t('publicProfile')}</Button>
-            </Link>
-            <Link href="/notifications">
-              <Button variant="secondary">{nav('notifications')}</Button>
-            </Link>
-            <Link href="/aspirations/new">
-              <Button>{nav('newAspiration')}</Button>
-            </Link>
-            {me.role === 'admin' ? (
-              <Link href="/admin/reports">
-                <Button variant="secondary">{nav('admin')}</Button>
-              </Link>
-            ) : null}
-            <Link href="/legal/privacy">
-              <Button variant="ghost">{legal('privacy')}</Button>
-            </Link>
-            <Link href="/legal/terms">
-              <Button variant="ghost">{legal('terms')}</Button>
-            </Link>
-          </div>
-
-          <Separator />
-          <ProfileEditor initialBio={me.bio ?? ''} initialDisplayName={me.displayName} />
-          <MediaUpload />
-          <AccountActions />
+      </ProfileHero>
+      <div className="mt-8 flex flex-wrap gap-3">
+        <Button asChild variant="outline">
+          <Link href={`/users/${me.username}`}>{t('publicProfile')}</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/notifications">{nav('notifications')}</Link>
+        </Button>
+        <Button asChild>
+          <Link href="/aspirations/new">{nav('newAspiration')}</Link>
+        </Button>
+        {me.role === 'admin' ? (
+          <Button asChild variant="outline">
+            <Link href="/admin/reports">{nav('admin')}</Link>
+          </Button>
+        ) : null}
+      </div>
+      <div className="mt-8 space-y-8">
+        <Separator />
+        <ProfileEditor initialBio={me.bio ?? ''} initialDisplayName={me.displayName} />
+        <MediaUpload />
+        <AccountActions />
+        <div className="flex gap-4 text-muted-foreground text-sm">
+          <Link className="hover:text-foreground hover:underline" href="/legal/privacy">
+            {legal('privacy')}
+          </Link>
+          <Link className="hover:text-foreground hover:underline" href="/legal/terms">
+            {legal('terms')}
+          </Link>
         </div>
-      </Card>
+      </div>
     </PageShell>
   );
 }

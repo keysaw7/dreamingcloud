@@ -1,36 +1,37 @@
-import { Card, PageShell } from '@dreamingcloud/ui';
+import { getTranslations } from 'next-intl/server';
+import { PageShell } from '@dreamingcloud/ui';
 
-export default function PrivacyPage() {
+import { Card } from '../../../components/ui/card';
+
+export default async function PrivacyPage() {
+  const t = await getTranslations('legal');
+
   return (
-    <PageShell maxWidth="md" title="Politique de confidentialité">
-      <Card className="space-y-4 text-[var(--dc-color-ink-soft)]">
-        <p>
-          DreamingCloud traite vos données personnelles pour fournir le service d’aspirations et de
-          contributions, conformément au RGPD.
-        </p>
-        <div>
-          <h2 className="text-lg font-semibold text-[var(--dc-color-ink)]">Données collectées</h2>
+    <PageShell maxWidth="md" title={t('privacy')}>
+      <Card className="space-y-4 border border-border p-6 text-muted-foreground">
+        <p>{t('privacyIntro')}</p>
+        <section aria-labelledby="privacy-data">
+          <h2 id="privacy-data" className="font-semibold text-foreground text-lg">
+            {t('privacyDataTitle')}
+          </h2>
           <ul className="mt-2 list-disc space-y-1 pl-5">
-            <li>Identifiants de compte (e-mail, nom d’utilisateur, profil)</li>
-            <li>Contenus publiés (aspirations, commentaires, messages de contribution)</li>
-            <li>Données techniques nécessaires à la sécurité (sessions, journaux d’audit)</li>
+            <li>{t('privacyDataAccount')}</li>
+            <li>{t('privacyDataContent')}</li>
+            <li>{t('privacyDataSecurity')}</li>
           </ul>
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold text-[var(--dc-color-ink)]">Vos droits</h2>
-          <p className="mt-2">
-            Vous pouvez exporter ou supprimer votre compte depuis votre profil. Pour toute demande,
-            contactez privacy@dreamingcloud.app.
-          </p>
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold text-[var(--dc-color-ink)]">Conservation</h2>
-          <p className="mt-2">
-            Les données de compte sont conservées tant que le compte est actif. Après suppression,
-            les identifiants personnels sont anonymisés ; les journaux de sécurité sont retenus de
-            façon limitée.
-          </p>
-        </div>
+        </section>
+        <section aria-labelledby="privacy-rights">
+          <h2 id="privacy-rights" className="font-semibold text-foreground text-lg">
+            {t('privacyRightsTitle')}
+          </h2>
+          <p className="mt-2">{t('privacyRightsDescription')}</p>
+        </section>
+        <section aria-labelledby="privacy-retention">
+          <h2 id="privacy-retention" className="font-semibold text-foreground text-lg">
+            {t('privacyRetentionTitle')}
+          </h2>
+          <p className="mt-2">{t('privacyRetentionDescription')}</p>
+        </section>
       </Card>
     </PageShell>
   );

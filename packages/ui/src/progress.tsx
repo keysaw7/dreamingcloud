@@ -13,7 +13,7 @@ export function Progress({ value, label, className, ...props }: ProgressProps) {
   return (
     <div className={cn('space-y-1.5', className)} {...props}>
       {label ? (
-        <div className="flex items-center justify-between text-xs text-[var(--dc-color-muted)]">
+        <div className="flex items-center justify-between text-[var(--dc-color-muted)] text-xs">
           <span>{label}</span>
           <span>{clamped}%</span>
         </div>

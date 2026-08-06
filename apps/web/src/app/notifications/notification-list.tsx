@@ -3,8 +3,12 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { Badge, Button, Card, EmptyState } from '@dreamingcloud/ui';
 
+import { Alert } from '../../components/ui/alert';
+import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
+import { Card } from '../../components/ui/card';
+import { EmptyState } from '../../components/ui/empty-state';
 import { apiFetch } from '../../lib/api';
 import { formatRelativeDate } from '../../lib/format';
 
@@ -16,17 +20,17 @@ interface NotificationItem {
   createdAt: string;
 }
 
-const LABELS: Record<string, string> = {
-  'social.support.given.v1': 'Quelqu’un soutient votre aspiration',
-  'social.comment.created.v1': 'Nouveau commentaire sur votre aspiration',
-  'social.save.created.v1': 'Quelqu’un a enregistré votre aspiration',
-  'social.follow.created.v1': 'Nouvel abonné',
-  'contributions.contribution.proposed.v1': 'Nouvelle proposition de contribution',
-  'contributions.contribution.accepted.v1': 'Contribution acceptée',
-  'contributions.contribution.declined.v1': 'Contribution refusée',
-  'contributions.contribution.in_progress.v1': 'Contribution démarrée',
-  'contributions.contribution.completed.v1': 'Contribution terminée',
-  'messaging.message.sent.v1': 'Nouveau message',
+const LABEL_KEYS: Record<string, string> = {
+  'social.support.given.v1': 'labels.supportGiven',
+  'social.comment.created.v1': 'labels.commentCreated',
+  'social.save.created.v1': 'labels.saveCreated',
+  'social.follow.created.v1': 'labels.followCreated',
+  'contributions.contribution.proposed.v1': 'labels.contributionProposed',
+  'contributions.contribution.accepted.v1': 'labels.contributionAccepted',
+  'contributions.contribution.declined.v1': 'labels.contributionDeclined',
+  'contributions.contribution.in_progress.v1': 'labels.contributionInProgress',
+  'contributions.contribution.completed.v1': 'labels.contributionCompleted',
+  'messaging.message.sent.v1': 'labels.messageSent',
 };
 
 function hrefFor(item: NotificationItem): string | null {
@@ -52,15 +56,21 @@ function hrefFor(item: NotificationItem): string | null {
 export function NotificationList({ initialItems }: { initialItems: NotificationItem[] }) {
   const t = useTranslations('notifications');
   const [items, setItems] = useState(initialItems);
+  const [error, setError] = useState<string | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
 
   async function markRead(id: string) {
+    setError(null);
+    setPendingId(id);
     try {
       await apiFetch(`/notifications/${id}/read`, { method: 'POST', body: '{}' });
       setItems((prev) =>
         prev.map((item) => (item.id === id ? { ...item, readAt: new Date().toISOString() } : item)),
       );
     } catch {
-      // ignore
+      setError(t('markReadError'));
+    } finally {
+      setPendingId(null);
     }
   }
 
@@ -70,16 +80,18 @@ export function NotificationList({ initialItems }: { initialItems: NotificationI
 
   return (
     <div className="space-y-3">
+      {error ? <Alert variant="destructive">{error}</Alert> : null}
       {items.map((item) => {
         const href = hrefFor(item);
-        const label = LABELS[item.type] ?? item.type;
+        const labelKey = LABEL_KEYS[item.type];
+        const label = labelKey && t.has(labelKey) ? t(labelKey) : item.type;
         const content = (
           <>
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-sm font-semibold">{label}</p>
-              {!item.readAt ? <Badge variant="primary">{t('newBadge')}</Badge> : null}
+              <p className="font-semibold text-sm">{label}</p>
+              {!item.readAt ? <Badge>{t('newBadge')}</Badge> : null}
             </div>
-            <p className="mt-1 text-sm text-[var(--dc-color-muted)]">
+            <p className="mt-1 text-muted-foreground text-sm">
               {formatRelativeDate(item.createdAt)}
             </p>
           </>
@@ -88,11 +100,18 @@ export function NotificationList({ initialItems }: { initialItems: NotificationI
         return (
           <Card
             key={item.id}
-            variant="interactive"
-            className={!item.readAt ? 'border-[var(--dc-color-primary)]/30' : undefined}
+            className={
+              !item.readAt
+                ? 'border border-primary/30 bg-card p-4'
+                : 'border border-border bg-card p-4'
+            }
           >
             {href ? (
-              <Link href={href} onClick={() => void markRead(item.id)} className="block">
+              <Link
+                href={href}
+                onClick={() => void markRead(item.id)}
+                className="block rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
                 {content}
               </Link>
             ) : (
@@ -100,7 +119,13 @@ export function NotificationList({ initialItems }: { initialItems: NotificationI
             )}
             {!item.readAt ? (
               <div className="mt-3">
-                <Button size="sm" variant="ghost" onClick={() => void markRead(item.id)}>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={pendingId === item.id}
+                  onClick={() => void markRead(item.id)}
+                >
                   {t('markRead')}
                 </Button>
               </div>

@@ -12,6 +12,7 @@
     "cancel": "Annuler",
     "send": "Envoyer",
     "errorGeneric": "Une erreur est survenue.",
+    "skipToContent": "Aller au contenu",
     "notFoundTitle": "Page introuvable",
     "notFoundDescription": "Cette page n’existe pas ou n’est plus disponible.",
     "errorTitle": "Impossible d’afficher cette page",
@@ -182,14 +183,38 @@
     "publishedAspirations": "Aspirations publiées",
     "followers": "{count} abonnés",
     "following": "{count} abonnements",
-    "emptyPublic": "Aucune aspiration publique."
+    "emptyPublic": "Aucune aspiration publique.",
+    "exportData": "Exporter mes données",
+    "exportSuccess": "Export téléchargé.",
+    "exportFailed": "Export impossible",
+    "deleteAccount": "Supprimer mon compte",
+    "deleteTitle": "Supprimer votre compte ?",
+    "deleteDescription": "Cette action est définitive. Vos données ne pourront pas être restaurées.",
+    "deleteConfirm": "Supprimer définitivement",
+    "deleteFailed": "Suppression impossible",
+    "logoutFailed": "Déconnexion impossible",
+    "followSuccess": "Vous suivez cette personne.",
+    "followFailed": "Action impossible"
   },
   "notifications": {
     "title": "Notifications",
     "empty": "Aucune notification pour le moment.",
     "loginPrompt": "Connectez-vous pour voir vos notifications.",
     "markRead": "Marquer comme lue",
-    "newBadge": "Nouveau"
+    "markReadError": "Impossible de marquer cette notification comme lue.",
+    "newBadge": "Nouveau",
+    "labels": {
+      "supportGiven": "Quelqu’un soutient votre aspiration",
+      "commentCreated": "Nouveau commentaire sur votre aspiration",
+      "saveCreated": "Quelqu’un a enregistré votre aspiration",
+      "followCreated": "Nouvel abonné",
+      "contributionProposed": "Nouvelle proposition de contribution",
+      "contributionAccepted": "Contribution acceptée",
+      "contributionDeclined": "Contribution refusée",
+      "contributionInProgress": "Contribution démarrée",
+      "contributionCompleted": "Contribution terminée",
+      "messageSent": "Nouveau message"
+    }
   },
   "conversations": {
     "title": "Messages",
@@ -208,10 +233,28 @@
   "admin": {
     "reportsTitle": "Signalements ouverts",
     "empty": "Aucun signalement ouvert.",
-    "loginPrompt": "Accès réservé aux administrateurs."
+    "loginPrompt": "Accès réservé aux administrateurs.",
+    "dismiss": "Rejeter",
+    "remove": "Retirer",
+    "dismissReason": "Signalement rejeté",
+    "removeReason": "Contenu retiré",
+    "resolveSuccess": "Signalement traité.",
+    "resolveError": "Action impossible"
   },
   "legal": {
     "privacy": "Politique de confidentialité",
-    "terms": "Conditions d’utilisation"
+    "terms": "Conditions d’utilisation",
+    "privacyIntro": "DreamingCloud traite vos données personnelles pour fournir le service d’aspirations et de contributions, conformément au RGPD.",
+    "privacyDataTitle": "Données collectées",
+    "privacyDataAccount": "Identifiants de compte (e-mail, nom d’utilisateur, profil)",
+    "privacyDataContent": "Contenus publiés (aspirations, commentaires, messages de contribution)",
+    "privacyDataSecurity": "Données techniques nécessaires à la sécurité (sessions, journaux d’audit)",
+    "privacyRightsTitle": "Vos droits",
+    "privacyRightsDescription": "Vous pouvez exporter ou supprimer votre compte depuis votre profil. Pour toute demande, contactez privacy@dreamingcloud.app.",
+    "privacyRetentionTitle": "Conservation",
+    "privacyRetentionDescription": "Les données de compte sont conservées tant que le compte est actif. Après suppression, les identifiants personnels sont anonymisés ; les journaux de sécurité sont retenus de façon limitée.",
+    "termsIntro": "DreamingCloud est une plateforme d’aspirations et de contributions. En créant un compte, vous vous engagez à publier des contenus sincères et respectueux.",
+    "termsContributions": "Les contributions non monétaires sont des engagements entre utilisateurs. La plateforme facilite la mise en relation et n’est pas partie aux engagements privés.",
+    "termsModeration": "Les contenus illicites, trompeurs ou abusifs peuvent être signalés et retirés. Les comptes peuvent être suspendus en cas de violation."
   }
 }

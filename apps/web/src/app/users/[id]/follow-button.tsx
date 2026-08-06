@@ -1,35 +1,24 @@
 'use client';
 
+import { useMutation } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
-import { Alert, Button } from '@dreamingcloud/ui';
+import { toast } from 'sonner';
 
+import { Button } from '../../../components/ui/button';
 import { apiFetch } from '../../../lib/api';
 
-export function FollowButton({ userId }: { userId: string }) {
+export function FollowButton({ userId }: Readonly<{ userId: string }>) {
   const social = useTranslations('social');
-  const [message, setMessage] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  async function follow() {
-    setBusy(true);
-    setMessage(null);
-    try {
-      await apiFetch(`/users/${userId}/follow`, { method: 'POST', body: '{}' });
-      setMessage('Vous suivez cette personne.');
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Action impossible');
-    } finally {
-      setBusy(false);
-    }
-  }
+  const t = useTranslations('profile');
+  const follow = useMutation({
+    mutationFn: () => apiFetch(`/users/${userId}/follow`, { method: 'POST', body: '{}' }),
+    onSuccess: () => toast.success(t('followSuccess')),
+    onError: (error) => toast.error(error instanceof Error ? error.message : t('followFailed')),
+  });
 
   return (
-    <div className="space-y-2">
-      <Button onClick={() => void follow()} disabled={busy}>
-        {social('follow')}
-      </Button>
-      {message ? <Alert variant="info">{message}</Alert> : null}
-    </div>
+    <Button disabled={follow.isPending} onClick={() => follow.mutate()}>
+      {social('follow')}
+    </Button>
   );
 }

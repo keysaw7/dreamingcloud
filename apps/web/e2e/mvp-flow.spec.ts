@@ -9,6 +9,11 @@ async function login(page: Page, email: string) {
   await page.getByLabel('Mot de passe').fill(PASSWORD);
   await page.getByRole('button', { name: 'Se connecter' }).click();
   await page.waitForURL((url) => url.pathname === '/');
+  const sidebar = page.getByRole('complementary');
+  await expect(
+    sidebar.getByText(email === 'lea@demo.local' ? 'Léa Martin' : 'Noah Bernard'),
+  ).toBeVisible();
+  await expect(sidebar.getByRole('link', { name: 'Profil' })).toBeVisible();
 }
 
 test.describe('MVP flow', () => {
@@ -40,15 +45,25 @@ test.describe('MVP flow', () => {
     await owner.getByRole('button', { name: 'Continuer' }).click();
     await owner.getByPlaceholder('Titre du besoin').fill('Aide technique');
     await owner.getByRole('button', { name: 'Continuer' }).click();
+    const publishResponse = owner.waitForResponse(
+      (response) =>
+        response.url().includes('/publish') &&
+        response.request().method() === 'POST' &&
+        response.ok(),
+    );
     await owner.getByRole('button', { name: 'Publier mon rêve' }).click();
-    await owner.waitForURL('**/aspirations/**');
-    await expect(owner.getByRole('heading', { name: title })).toBeVisible();
+    await publishResponse;
+    await owner.waitForURL(
+      (url) => url.pathname.startsWith('/aspirations/') && url.pathname !== '/aspirations/new',
+    );
+    await expect(owner.getByRole('heading', { level: 1, name: title })).toBeVisible();
 
     const aspirationUrl = owner.url();
+    expect(aspirationUrl).not.toMatch(/\/aspirations\/new(?:\?|$)/);
 
     await login(contributor, 'noah@demo.local');
     await contributor.goto(aspirationUrl);
-    await expect(contributor.getByRole('heading', { name: title })).toBeVisible();
+    await expect(contributor.getByRole('heading', { level: 1, name: title })).toBeVisible();
     await contributor.getByRole('button', { name: 'Je soutiens' }).click();
     await contributor.getByLabel('Commentaire').fill('Bravo pour ce projet, je te soutiens !');
     await contributor.getByRole('button', { name: 'Publier le commentaire' }).click();

@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Param, Post, Query } from '@nestjs/common';
+import { UniqueId } from '@dreamingcloud/shared-kernel';
 import { z } from 'zod';
 
 import { createCursorPage, decodeCursor } from '../../../../platform/http/cursor-pagination';
@@ -14,7 +15,6 @@ import {
   ASPIRATION_REPOSITORY,
   type AspirationRepository,
 } from '../../domain/ports/aspiration.repository';
-import { Inject } from '@nestjs/common';
 
 @Controller('aspirations')
 export class AspirationsController {
@@ -81,8 +81,7 @@ export class AspirationsController {
   @Public()
   @Get(':idOrSlug')
   public async get(@Param('idOrSlug') idOrSlug: string, @OptionalUser() viewerId: string | null) {
-    const looksLikeUuid = idOrSlug.includes('-') && idOrSlug.length >= 32;
-    const data = looksLikeUuid
+    const data = UniqueId.isValid(idOrSlug)
       ? await this.getAspiration.byId(idOrSlug, viewerId)
       : await this.getAspiration.bySlug(idOrSlug, viewerId);
     return { data };

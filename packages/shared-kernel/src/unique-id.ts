@@ -7,10 +7,14 @@ const UUID_V7_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}
 export class UniqueId {
   private constructor(public readonly value: string) {}
 
+  public static isValid(value: string): boolean {
+    return UUID_V7_PATTERN.test(value);
+  }
+
   public static create(value?: string): UniqueId {
     const id = value ?? UniqueId.generateV7();
 
-    if (!UUID_V7_PATTERN.test(id)) {
+    if (!UniqueId.isValid(id)) {
       throw new InvariantViolationError('UniqueId must be a valid UUIDv7.');
     }
 

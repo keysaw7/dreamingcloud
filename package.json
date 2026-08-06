@@ -10,7 +10,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
-    "lint": "biome check . && node scripts/check-architecture.mjs && depcruise apps/api/src --config .dependency-cruiser.cjs",
+    "lint": "biome check . && node scripts/check-ui-conventions.mjs && node scripts/check-architecture.mjs && depcruise apps/api/src --config .dependency-cruiser.cjs",
     "format": "biome format --write .",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",

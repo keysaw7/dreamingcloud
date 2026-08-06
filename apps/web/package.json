@@ -12,14 +12,24 @@
   },
   "dependencies": {
     "@dreamingcloud/contracts": "workspace:*",
-    "@dreamingcloud/design-tokens": "workspace:*",
-    "@dreamingcloud/ui": "workspace:*",
+    "@radix-ui/react-alert-dialog": "^1.1.23",
+    "@radix-ui/react-slot": "^1.3.3",
+    "@radix-ui/react-tabs": "^1.1.21",
+    "@radix-ui/react-tooltip": "^1.2.16",
+    "@tanstack/react-query": "^5.101.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.28.0",
     "next": "^16.3.0",
     "next-intl": "^4.13.5",
+    "next-themes": "^0.4.6",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/react": "^19.2.18",

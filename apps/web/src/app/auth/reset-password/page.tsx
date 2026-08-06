@@ -4,13 +4,17 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Suspense, useState } from 'react';
-import { Alert, Button, Card, Field, Input, PageShell } from '@dreamingcloud/ui';
 
+import { AuthLayout } from '../../../components/auth-layout';
+import { Alert } from '../../../components/ui/alert';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
 import { resetPassword } from '../../../lib/api/auth';
 
 function ResetPasswordInner() {
   const params = useSearchParams();
   const t = useTranslations('auth');
+  const common = useTranslations('common');
   const token = params.get('token') ?? '';
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState<string | null>(null);
@@ -26,53 +30,55 @@ function ResetPasswordInner() {
       await resetPassword(token, password);
       setMessage(t('resetSuccess'));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Réinitialisation impossible');
+      setError(err instanceof Error ? err.message : common('errorGeneric'));
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <PageShell maxWidth="sm">
-      <Card>
-        <h1 className="text-2xl font-semibold">{t('resetTitle')}</h1>
-        <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-          <Field label={t('password')} htmlFor="reset-password">
-            <Input
-              id="reset-password"
-              type="password"
-              minLength={10}
-              value={password}
-              disabled={busy}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              autoComplete="new-password"
-            />
-          </Field>
-          {error ? <Alert variant="danger">{error}</Alert> : null}
-          {message ? <Alert variant="success">{message}</Alert> : null}
-          <Button type="submit" className="w-full" disabled={!token || busy}>
-            {t('resetSubmit')}
-          </Button>
-        </form>
-        <p className="mt-4 text-sm">
-          <Link href="/auth/login" className="underline">
-            {t('loginTitle')}
-          </Link>
-        </p>
-      </Card>
-    </PageShell>
+    <AuthLayout
+      brand={common('appName')}
+      footer={
+        <Link className="font-semibold text-primary hover:underline" href="/auth/login">
+          {t('loginTitle')}
+        </Link>
+      }
+      title={t('resetTitle')}
+    >
+      <form className="space-y-5" onSubmit={onSubmit}>
+        <label className="grid gap-2 font-medium text-sm" htmlFor="reset-password">
+          {t('password')}
+          <Input
+            autoComplete="new-password"
+            disabled={busy}
+            id="reset-password"
+            minLength={10}
+            required
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </label>
+        {error ? <Alert variant="destructive">{error}</Alert> : null}
+        {message ? <Alert variant="success">{message}</Alert> : null}
+        <Button className="w-full" disabled={!token || busy} type="submit">
+          {t('resetSubmit')}
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }
 
 export default function ResetPasswordPage() {
+  const t = useTranslations('auth');
   const common = useTranslations('common');
   return (
     <Suspense
       fallback={
-        <PageShell maxWidth="sm">
-          <p>{common('loading')}</p>
-        </PageShell>
+        <AuthLayout brand={common('appName')} title={t('resetTitle')}>
+          <p className="text-muted-foreground text-sm">{common('loading')}</p>
+        </AuthLayout>
       }
     >
       <ResetPasswordInner />

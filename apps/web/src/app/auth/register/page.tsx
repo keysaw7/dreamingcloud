@@ -5,13 +5,17 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { Alert, Button, Card, Field, Input, PageShell } from '@dreamingcloud/ui';
 
+import { AuthLayout } from '../../../components/auth-layout';
+import { Alert } from '../../../components/ui/alert';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
 import { register } from '../../../lib/api/auth';
 
 export default function RegisterPage() {
   const router = useRouter();
   const t = useTranslations('auth');
+  const common = useTranslations('common');
   const [form, setForm] = useState({
     email: '',
     username: '',
@@ -27,7 +31,7 @@ export default function RegisterPage() {
 
     const parsed = registerUserSchema.safeParse(form);
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? 'Inscription impossible');
+      setError(parsed.error.issues[0]?.message ?? common('errorGeneric'));
       return;
     }
 
@@ -36,81 +40,85 @@ export default function RegisterPage() {
       await register(parsed.data);
       router.push('/auth/login?registered=1');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Inscription impossible');
+      setError(err instanceof Error ? err.message : common('errorGeneric'));
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <PageShell maxWidth="sm">
-      <Card className="shadow-[var(--dc-shadow-md)]">
-        <p className="text-sm font-semibold text-[var(--dc-color-primary)]">DreamingCloud</p>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">{t('registerTitle')}</h1>
-        <p className="mt-2 text-sm text-[var(--dc-color-muted)]">{t('verifyHint')}</p>
-        <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-          <Field label={t('displayName')} htmlFor="register-display-name">
-            <Input
-              id="register-display-name"
-              value={form.displayName}
-              disabled={busy}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, displayName: event.target.value }))
-              }
-              required
-            />
-          </Field>
-          <Field label={t('username')} htmlFor="register-username">
-            <Input
-              id="register-username"
-              value={form.username}
-              disabled={busy}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, username: event.target.value }))
-              }
-              required
-              minLength={3}
-            />
-          </Field>
-          <Field label={t('email')} htmlFor="register-email">
-            <Input
-              id="register-email"
-              type="email"
-              value={form.email}
-              disabled={busy}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, email: event.target.value }))
-              }
-              required
-              autoComplete="email"
-            />
-          </Field>
-          <Field label={t('password')} htmlFor="register-password">
-            <Input
-              id="register-password"
-              type="password"
-              value={form.password}
-              disabled={busy}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, password: event.target.value }))
-              }
-              required
-              minLength={10}
-              autoComplete="new-password"
-            />
-          </Field>
-          {error ? <Alert variant="danger">{error}</Alert> : null}
-          <Button type="submit" className="w-full" disabled={busy}>
-            {t('registerSubmit')}
-          </Button>
-        </form>
-        <p className="mt-4 text-sm text-[var(--dc-color-muted)]">
-          {t('hasAccount')}{' '}
-          <Link href="/auth/login" className="text-[var(--dc-color-primary)] underline">
+    <AuthLayout
+      brand={common('appName')}
+      description={t('verifyHint')}
+      footer={
+        <>
+          <span>{t('hasAccount')} </span>
+          <Link className="font-semibold text-primary hover:underline" href="/auth/login">
             {t('loginTitle')}
           </Link>
-        </p>
-      </Card>
-    </PageShell>
+        </>
+      }
+      title={t('registerTitle')}
+    >
+      <form className="space-y-5" onSubmit={onSubmit}>
+        <label className="grid gap-2 font-medium text-sm" htmlFor="register-display-name">
+          {t('displayName')}
+          <Input
+            disabled={busy}
+            id="register-display-name"
+            required
+            value={form.displayName}
+            onChange={(event) =>
+              setForm((current) => ({ ...current, displayName: event.target.value }))
+            }
+          />
+        </label>
+        <label className="grid gap-2 font-medium text-sm" htmlFor="register-username">
+          {t('username')}
+          <Input
+            autoComplete="username"
+            disabled={busy}
+            id="register-username"
+            minLength={3}
+            required
+            value={form.username}
+            onChange={(event) =>
+              setForm((current) => ({ ...current, username: event.target.value }))
+            }
+          />
+        </label>
+        <label className="grid gap-2 font-medium text-sm" htmlFor="register-email">
+          {t('email')}
+          <Input
+            autoComplete="email"
+            disabled={busy}
+            id="register-email"
+            required
+            type="email"
+            value={form.email}
+            onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+          />
+        </label>
+        <label className="grid gap-2 font-medium text-sm" htmlFor="register-password">
+          {t('password')}
+          <Input
+            autoComplete="new-password"
+            disabled={busy}
+            id="register-password"
+            minLength={10}
+            required
+            type="password"
+            value={form.password}
+            onChange={(event) =>
+              setForm((current) => ({ ...current, password: event.target.value }))
+            }
+          />
+        </label>
+        {error ? <Alert variant="destructive">{error}</Alert> : null}
+        <Button className="w-full" disabled={busy} type="submit">
+          {t('registerSubmit')}
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }

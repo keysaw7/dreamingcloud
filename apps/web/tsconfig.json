@@ -8,6 +8,10 @@
     "noEmit": true,
     "allowJs": false,
     "incremental": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@dreamingcloud/ui": ["./src/components/ui"]
+    },
     "plugins": [{ "name": "next" }],
     "isolatedModules": true
   },

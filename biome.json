@@ -35,7 +35,7 @@
         "useExhaustiveDependencies": "off"
       },
       "nursery": {
-        "useSortedClasses": "off"
+        "useSortedClasses": "error"
       }
     }
   },

@@ -4,8 +4,11 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Suspense, useState } from 'react';
-import { Alert, Button, Card, Field, Input, PageShell } from '@dreamingcloud/ui';
 
+import { AuthLayout } from '../../../components/auth-layout';
+import { Alert } from '../../../components/ui/alert';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
 import { login } from '../../../lib/api/auth';
 
 function LoginForm() {
@@ -13,6 +16,7 @@ function LoginForm() {
   const params = useSearchParams();
   const t = useTranslations('auth');
   const nav = useTranslations('nav');
+  const common = useTranslations('common');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -27,80 +31,70 @@ function LoginForm() {
       await login(email, password);
       router.push('/');
       router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('loginFailed'));
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : t('loginFailed'));
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <PageShell maxWidth="sm">
-      <Card className="shadow-[var(--dc-shadow-md)]">
-        <p className="text-sm font-semibold text-[var(--dc-color-primary)]">DreamingCloud</p>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">{t('loginTitle')}</h1>
-        {registered ? (
-          <Alert className="mt-4" variant="success">
-            {t('registerSuccess')}
-          </Alert>
-        ) : null}
-        <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-          <Field label={t('email')} htmlFor="login-email">
-            <Input
-              id="login-email"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              disabled={busy}
-              autoComplete="email"
-            />
-          </Field>
-          <Field label={t('password')} htmlFor="login-password">
-            <Input
-              id="login-password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              disabled={busy}
-              autoComplete="current-password"
-            />
-          </Field>
-          {error ? <Alert variant="danger">{error}</Alert> : null}
-          <Button type="submit" className="w-full" disabled={busy}>
-            {t('loginSubmit')}
-          </Button>
-        </form>
-        <p className="mt-4 text-sm text-[var(--dc-color-muted)]">
-          {t('noAccount')}{' '}
-          <Link
-            href="/auth/register"
-            className="font-medium text-[var(--dc-color-primary)] hover:underline"
-          >
+    <AuthLayout
+      brand={common('appName')}
+      title={t('loginTitle')}
+      footer={
+        <>
+          <span>{t('noAccount')} </span>
+          <Link className="font-semibold text-primary hover:underline" href="/auth/register">
             {nav('register')}
           </Link>
-        </p>
-        <p className="mt-2 text-sm">
-          <Link href="/auth/forgot-password" className="hover:underline">
-            {t('forgotPassword')}
-          </Link>
-        </p>
-      </Card>
-    </PageShell>
+        </>
+      }
+    >
+      {registered ? <Alert variant="success">{t('registerSuccess')}</Alert> : null}
+      <form className="mt-6 space-y-5" onSubmit={onSubmit}>
+        <label className="grid gap-2 font-medium text-sm" htmlFor="login-email">
+          {t('email')}
+          <Input
+            autoComplete="email"
+            disabled={busy}
+            id="login-email"
+            required
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+        </label>
+        <label className="grid gap-2 font-medium text-sm" htmlFor="login-password">
+          {t('password')}
+          <Input
+            autoComplete="current-password"
+            disabled={busy}
+            id="login-password"
+            required
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </label>
+        {error ? <Alert variant="destructive">{error}</Alert> : null}
+        <Button className="w-full" disabled={busy} type="submit">
+          {t('loginSubmit')}
+        </Button>
+      </form>
+      <Link
+        className="mt-5 inline-block text-primary text-sm hover:underline"
+        href="/auth/forgot-password"
+      >
+        {t('forgotPassword')}
+      </Link>
+    </AuthLayout>
   );
 }
 
 export default function LoginPage() {
-  const common = useTranslations('common');
   return (
-    <Suspense
-      fallback={
-        <PageShell maxWidth="sm">
-          <p>{common('loading')}</p>
-        </PageShell>
-      }
-    >
+    <Suspense>
       <LoginForm />
     </Suspense>
   );

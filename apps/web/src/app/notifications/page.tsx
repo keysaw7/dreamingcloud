@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { PageShell } from '@dreamingcloud/ui';
 
+import { Alert } from '../../components/ui/alert';
 import { AuthGate } from '../../features/auth/auth-gate';
 import { apiFetchServer } from '../../lib/api-server';
 import { getCurrentUser } from '../../lib/session';
@@ -18,6 +19,7 @@ interface NotificationRow {
 export default async function NotificationsPage() {
   const t = await getTranslations('notifications');
   const nav = await getTranslations('nav');
+  const common = await getTranslations('common');
   const user = await getCurrentUser();
 
   if (!user) {
@@ -29,16 +31,21 @@ export default async function NotificationsPage() {
   }
 
   let items: NotificationRow[] = [];
+  let error: string | null = null;
   try {
     const response = await apiFetchServer<ApiListResponse<NotificationRow>>('/notifications');
     items = [...response.data];
-  } catch {
-    items = [];
+  } catch (caughtError) {
+    error = caughtError instanceof Error ? caughtError.message : common('errorGeneric');
   }
 
   return (
     <PageShell title={t('title')} maxWidth="lg">
-      <NotificationList initialItems={items} />
+      {error ? (
+        <Alert variant="destructive">{error}</Alert>
+      ) : (
+        <NotificationList initialItems={items} />
+      )}
     </PageShell>
   );
 }

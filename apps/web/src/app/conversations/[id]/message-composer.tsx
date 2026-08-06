@@ -3,8 +3,10 @@
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { Alert, Button, Field, Textarea } from '@dreamingcloud/ui';
 
+import { Alert } from '../../../components/ui/alert';
+import { Button } from '../../../components/ui/button';
+import { Textarea } from '../../../components/ui/textarea';
 import { apiFetch } from '../../../lib/api';
 
 export function MessageComposer({ conversationId }: { conversationId: string }) {
@@ -36,19 +38,27 @@ export function MessageComposer({ conversationId }: { conversationId: string }) 
   }
 
   return (
-    <div className="space-y-3 border-t border-[var(--dc-color-border)] pt-4">
-      <Field label={t('composerLabel')} htmlFor="message-body">
+    <div className="space-y-3 border-border border-t pt-4" aria-busy={busy}>
+      <div className="space-y-1.5">
+        <label htmlFor="message-body" className="block font-medium text-sm">
+          {t('composerLabel')}
+        </label>
         <Textarea
           id="message-body"
-          className="min-h-24"
+          aria-describedby={error ? 'message-composer-error' : undefined}
+          aria-invalid={error ? true : undefined}
           value={body}
           disabled={busy}
           onChange={(event) => setBody(event.target.value)}
           placeholder={t('composerPlaceholder')}
         />
-      </Field>
-      {error ? <Alert variant="danger">{error}</Alert> : null}
-      <Button disabled={busy} onClick={() => void send()}>
+      </div>
+      {error ? (
+        <Alert id="message-composer-error" variant="destructive">
+          {error}
+        </Alert>
+      ) : null}
+      <Button type="button" disabled={busy} onClick={() => void send()}>
         {t('send')}
       </Button>
     </div>

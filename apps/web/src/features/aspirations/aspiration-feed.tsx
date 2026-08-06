@@ -1,24 +1,47 @@
 'use client';
 
+import { useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { Alert, Button, EmptyState, Skeleton } from '@dreamingcloud/ui';
 
+import { Alert } from '../../components/ui/alert';
+import { Button } from '../../components/ui/button';
 import { fetchDiscoverPage, fetchFollowingPage } from '../../lib/api/feed';
 import type { AspirationListItem } from '../../lib/types';
 import { AspirationCard } from './aspiration-card';
 
+function FeedSkeleton() {
+  return (
+    <div aria-busy="true" aria-live="polite" className="space-y-4">
+      {[1, 2].map((item) => (
+        <div key={item} className="animate-pulse rounded-lg border border-border bg-card p-5">
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-full bg-muted" />
+            <div className="space-y-2">
+              <div className="h-3 w-28 rounded bg-muted" />
+              <div className="h-2.5 w-20 rounded bg-muted" />
+            </div>
+          </div>
+          <div className="mt-6 h-5 w-3/4 rounded bg-muted" />
+          <div className="mt-3 h-3 w-full rounded bg-muted" />
+          <div className="mt-2 h-3 w-5/6 rounded bg-muted" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function AspirationFeed({
-  mode,
-  initialItems,
-  initialCursor,
-  initialHasMore,
-  emptyTitle,
-  emptyDescription,
   emptyActionHref,
   emptyActionLabel,
-}: {
+  emptyDescription,
+  emptyTitle,
+  initialCursor,
+  initialHasMore,
+  initialItems,
+  mode,
+}: Readonly<{
   mode: 'discover' | 'following';
   initialItems: readonly AspirationListItem[];
   initialCursor?: string | null;
@@ -27,53 +50,40 @@ export function AspirationFeed({
   emptyDescription?: string;
   emptyActionHref?: string;
   emptyActionLabel?: string;
-}) {
+}>) {
   const aspirations = useTranslations('aspirations');
   const common = useTranslations('common');
   const [items, setItems] = useState<AspirationListItem[]>([...initialItems]);
-  const [cursor, setCursor] = useState<string | null>(initialCursor ?? null);
+  const [cursor, setCursor] = useState(initialCursor ?? null);
   const [hasMore, setHasMore] = useState(Boolean(initialHasMore));
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function loadMore() {
-    if (!hasMore || loading) {
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    try {
-      const page =
-        mode === 'discover'
-          ? await fetchDiscoverPage(10, cursor)
-          : await fetchFollowingPage(10, cursor);
-      setItems((prev) => {
-        const known = new Set(prev.map((item) => item.id));
-        return [...prev, ...page.items.filter((item) => !known.has(item.id))];
+  const pagination = useMutation({
+    mutationFn: () =>
+      mode === 'discover' ? fetchDiscoverPage(10, cursor) : fetchFollowingPage(10, cursor),
+    onSuccess: (page) => {
+      setItems((current) => {
+        const known = new Set(current.map((item) => item.id));
+        return [...current, ...page.items.filter((item) => !known.has(item.id))];
       });
       setCursor(page.cursor);
       setHasMore(page.hasMore);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : common('errorGeneric'));
-    } finally {
-      setLoading(false);
-    }
-  }
+    },
+  });
 
   if (items.length === 0) {
     return (
-      <EmptyState
-        title={emptyTitle}
-        description={emptyDescription}
-        action={
-          emptyActionHref && emptyActionLabel ? (
-            <Link href={emptyActionHref}>
-              <Button>{emptyActionLabel}</Button>
-            </Link>
-          ) : undefined
-        }
-      />
+      <section className="rounded-lg border border-border border-dashed px-6 py-12 text-center">
+        <h2 className="font-semibold text-xl tracking-tight">{emptyTitle}</h2>
+        {emptyDescription ? (
+          <p className="mx-auto mt-2 max-w-md text-muted-foreground text-sm leading-relaxed">
+            {emptyDescription}
+          </p>
+        ) : null}
+        {emptyActionHref && emptyActionLabel ? (
+          <Button asChild className="mt-6">
+            <Link href={emptyActionHref}>{emptyActionLabel}</Link>
+          </Button>
+        ) : null}
+      </section>
     );
   }
 
@@ -82,20 +92,20 @@ export function AspirationFeed({
       {items.map((item) => (
         <AspirationCard key={item.id} item={item} progressLabel={aspirations('progress')} />
       ))}
-
-      {error ? <Alert variant="danger">{error}</Alert> : null}
-
-      {loading ? (
-        <div className="space-y-4" aria-busy="true" aria-live="polite">
-          <Skeleton className="h-48 w-full rounded-[var(--dc-radius-lg)]" />
-          <Skeleton className="h-48 w-full rounded-[var(--dc-radius-lg)]" />
-        </div>
+      {pagination.error ? (
+        <Alert variant="destructive">
+          {pagination.error instanceof Error ? pagination.error.message : common('errorGeneric')}
+        </Alert>
       ) : null}
-
+      {pagination.isPending ? <FeedSkeleton /> : null}
       {hasMore ? (
         <div className="flex justify-center pt-2">
-          <Button variant="secondary" disabled={loading} onClick={() => void loadMore()}>
-            {loading ? common('loading') : aspirations('loadMore')}
+          <Button
+            disabled={pagination.isPending}
+            variant="outline"
+            onClick={() => pagination.mutate()}
+          >
+            {pagination.isPending ? common('loading') : aspirations('loadMore')}
           </Button>
         </div>
       ) : null}

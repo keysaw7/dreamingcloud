@@ -26,14 +26,14 @@ export default async function AspirationPage({
   return (
     <PageShell maxWidth="lg" className="max-w-[48rem]">
       <Card variant="flush">
-        <div className="border-b border-[var(--dc-color-border)] bg-[linear-gradient(135deg,var(--dc-color-primary-soft),var(--dc-color-surface))] px-6 py-6">
+        <div className="border-[var(--dc-color-border)] border-b bg-[linear-gradient(135deg,var(--dc-color-primary-soft),var(--dc-color-surface))] px-6 py-6">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="primary">
               {t('progress')} {aspiration.progressPercent}%
             </Badge>
             {aspiration.status ? <Badge>{aspiration.status}</Badge> : null}
           </div>
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h1 className="mt-4 font-semibold text-3xl tracking-tight sm:text-4xl">
             {aspiration.title}
           </h1>
           <div className="mt-5 flex items-center gap-3">
@@ -41,7 +41,7 @@ export default async function AspirationPage({
               <Avatar name={ownerName} size="md" />
             </Link>
             <div>
-              <p className="text-sm text-[var(--dc-color-muted)]">{t('byOwner')}</p>
+              <p className="text-[var(--dc-color-muted)] text-sm">{t('byOwner')}</p>
               <Link
                 href={ownerHref}
                 className="font-semibold text-[var(--dc-color-primary)] hover:underline"
@@ -55,7 +55,7 @@ export default async function AspirationPage({
 
         <div className="space-y-8 px-6 py-6">
           <section>
-            <h2 className="text-lg font-semibold">{t('tabStory')}</h2>
+            <h2 className="font-semibold text-lg">{t('tabStory')}</h2>
             <p className="mt-3 whitespace-pre-wrap text-[var(--dc-color-ink-soft)] leading-relaxed">
               {aspiration.story}
             </p>

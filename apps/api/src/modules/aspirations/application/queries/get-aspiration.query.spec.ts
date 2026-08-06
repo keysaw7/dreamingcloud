@@ -36,28 +36,64 @@ describe('GetAspirationQuery authorization', () => {
 
   it('forbids private published aspirations for non-owners', async () => {
     const ownerId = UniqueId.create();
-    const aspiration = Aspiration.createDraft({
-      ownerId,
-      title: 'Privée mais publiée',
-      story: 'Un récit suffisamment détaillé pour passer les validations métier.',
-      categoryId: null,
-      visibility: 'private',
-      correlationId: UniqueId.create(),
-    });
-    aspiration.addNeed({
-      needType: 'time',
-      title: 'Aide',
-      description: null,
-      correlationId: UniqueId.create(),
-    });
-    aspiration.publish(UniqueId.create());
-
+    const aspiration = published(ownerId, 'private', 'Privée mais publiée');
     const query = new GetAspirationQuery(repoWith(aspiration));
     await expect(query.byId(aspiration.id.value, UniqueId.create().value)).rejects.toBeInstanceOf(
       ForbiddenException,
     );
   });
+
+  it('allows anonymous viewers to read a public published aspiration', async () => {
+    const aspiration = published(UniqueId.create(), 'public', 'Publique et publiée');
+    const query = new GetAspirationQuery(repoWith(aspiration));
+
+    const dto = await query.bySlug(aspiration.slug, null);
+    expect(dto.status).toBe('published');
+    expect(dto.visibility).toBe('public');
+    expect(dto.title).toBe('Publique et publiée');
+  });
+
+  it('allows authenticated non-owners to read a public published aspiration', async () => {
+    const aspiration = published(UniqueId.create(), 'public', 'Accessible aux contributeurs');
+    const query = new GetAspirationQuery(repoWith(aspiration));
+
+    const dto = await query.bySlug(aspiration.slug, UniqueId.create().value);
+    expect(dto.status).toBe('published');
+    expect(dto.visibility).toBe('public');
+  });
+
+  it('hides drafts from authenticated non-owners', async () => {
+    const aspiration = draft();
+    const query = new GetAspirationQuery(repoWith(aspiration));
+
+    await expect(query.bySlug(aspiration.slug, UniqueId.create().value)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
 });
+
+function published(
+  ownerId: UniqueId,
+  visibility: 'public' | 'private' | 'unlisted',
+  title: string,
+): Aspiration {
+  const aspiration = Aspiration.createDraft({
+    ownerId,
+    title,
+    story: 'Un récit suffisamment détaillé pour passer les validations métier.',
+    categoryId: null,
+    visibility,
+    correlationId: UniqueId.create(),
+  });
+  aspiration.addNeed({
+    needType: 'time',
+    title: 'Aide',
+    description: null,
+    correlationId: UniqueId.create(),
+  });
+  aspiration.publish(UniqueId.create());
+  return aspiration;
+}
 
 function repoWith(aspiration: Aspiration): AspirationRepository {
   return {

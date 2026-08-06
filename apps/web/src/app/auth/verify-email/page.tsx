@@ -4,8 +4,10 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Suspense, useEffect, useState } from 'react';
-import { Alert, Button, Card, PageShell } from '@dreamingcloud/ui';
 
+import { AuthLayout } from '../../../components/auth-layout';
+import { Alert } from '../../../components/ui/alert';
+import { Button } from '../../../components/ui/button';
 import { verifyEmail } from '../../../lib/api/auth';
 
 function VerifyEmailInner() {
@@ -35,44 +37,42 @@ function VerifyEmailInner() {
       .catch((error: unknown) => {
         if (!cancelled) {
           setStatus('error');
-          setMessage(error instanceof Error ? error.message : 'Vérification impossible');
+          setMessage(error instanceof Error ? error.message : common('errorGeneric'));
         }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [token, t]);
+  }, [common, token, t]);
 
   return (
-    <PageShell maxWidth="sm">
-      <Card>
-        <h1 className="text-2xl font-semibold">{t('verifyTitle')}</h1>
-        <div className="mt-4">
-          {status === 'loading' ? (
-            <p className="text-sm text-[var(--dc-color-muted)]">{common('loading')}</p>
-          ) : null}
-          {status === 'ok' && message ? <Alert variant="success">{message}</Alert> : null}
-          {status === 'error' && message ? <Alert variant="danger">{message}</Alert> : null}
-        </div>
-        {status === 'ok' ? (
-          <Link href="/auth/login" className="mt-6 inline-block">
-            <Button>{t('loginSubmit')}</Button>
-          </Link>
+    <AuthLayout brand={common('appName')} title={t('verifyTitle')}>
+      <div className="space-y-5">
+        {status === 'loading' ? (
+          <p className="text-muted-foreground text-sm">{common('loading')}</p>
         ) : null}
-      </Card>
-    </PageShell>
+        {status === 'ok' && message ? <Alert variant="success">{message}</Alert> : null}
+        {status === 'error' && message ? <Alert variant="destructive">{message}</Alert> : null}
+        {status === 'ok' ? (
+          <Button asChild className="w-full">
+            <Link href="/auth/login">{t('loginSubmit')}</Link>
+          </Button>
+        ) : null}
+      </div>
+    </AuthLayout>
   );
 }
 
 export default function VerifyEmailPage() {
+  const t = useTranslations('auth');
   const common = useTranslations('common');
   return (
     <Suspense
       fallback={
-        <PageShell maxWidth="sm">
-          <p>{common('loading')}</p>
-        </PageShell>
+        <AuthLayout brand={common('appName')} title={t('verifyTitle')}>
+          <p className="text-muted-foreground text-sm">{common('loading')}</p>
+        </AuthLayout>
       }
     >
       <VerifyEmailInner />

@@ -1,6 +1,10 @@
 import { getTranslations } from 'next-intl/server';
-import { Alert, Badge, Card, EmptyState, PageShell } from '@dreamingcloud/ui';
+import { PageShell } from '@dreamingcloud/ui';
 
+import { Alert } from '../../../components/ui/alert';
+import { Badge } from '../../../components/ui/badge';
+import { Card } from '../../../components/ui/card';
+import { EmptyState } from '../../../components/ui/empty-state';
 import { AuthGate } from '../../../features/auth/auth-gate';
 import { apiFetchServer } from '../../../lib/api-server';
 import { formatRelativeDate } from '../../../lib/format';
@@ -44,7 +48,7 @@ export default async function AdminReportsPage() {
   return (
     <PageShell title={t('reportsTitle')} maxWidth="lg">
       {error ? (
-        <Alert variant="danger">
+        <Alert variant="destructive">
           <p className="font-medium">{error}</p>
           <p className="mt-1">{t('loginPrompt')}</p>
         </Alert>
@@ -53,14 +57,14 @@ export default async function AdminReportsPage() {
       ) : (
         <div className="space-y-3">
           {reports.map((report) => (
-            <Card key={report.id} className="space-y-3">
+            <Card key={report.id} className="space-y-3 border border-border p-6">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-sm font-semibold">
+                <p className="font-semibold text-sm">
                   {report.subjectType} · {report.reason}
                 </p>
                 <Badge variant="warning">{report.status}</Badge>
               </div>
-              <p className="text-sm text-[var(--dc-color-muted)]">
+              <p className="text-muted-foreground text-sm">
                 {report.subjectId} · {formatRelativeDate(report.createdAt)}
               </p>
               {report.details ? <p className="text-sm">{report.details}</p> : null}

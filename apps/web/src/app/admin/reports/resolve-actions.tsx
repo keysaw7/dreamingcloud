@@ -1,41 +1,64 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { Button } from '@dreamingcloud/ui';
 
+import { Alert } from '../../../components/ui/alert';
+import { Button } from '../../../components/ui/button';
 import { apiFetch } from '../../../lib/api';
 
 export function ResolveReportActions({ reportId }: { reportId: string }) {
   const router = useRouter();
-  const [message, setMessage] = useState<string | null>(null);
+  const t = useTranslations('admin');
+  const [feedback, setFeedback] = useState<{
+    message: string;
+    variant: 'destructive' | 'success';
+  } | null>(null);
+  const [busy, setBusy] = useState(false);
 
   async function resolve(action: 'dismiss' | 'remove') {
-    setMessage(null);
+    setFeedback(null);
+    setBusy(true);
     try {
       await apiFetch(`/moderation/reports/${reportId}/resolve`, {
         method: 'POST',
         body: JSON.stringify({
           action,
-          reason: action === 'dismiss' ? 'Signalement rejeté' : 'Contenu retiré',
+          reason: action === 'dismiss' ? t('dismissReason') : t('removeReason'),
         }),
       });
-      setMessage('Signalement traité.');
+      setFeedback({ message: t('resolveSuccess'), variant: 'success' });
       router.refresh();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Action impossible');
+      setFeedback({
+        message: error instanceof Error ? error.message : t('resolveError'),
+        variant: 'destructive',
+      });
+    } finally {
+      setBusy(false);
     }
   }
 
   return (
-    <div className="mt-3 flex flex-wrap gap-2">
-      <Button size="sm" variant="secondary" onClick={() => void resolve('dismiss')}>
-        Rejeter
+    <div className="mt-3 flex flex-wrap gap-2" aria-busy={busy}>
+      <Button
+        type="button"
+        size="sm"
+        variant="secondary"
+        disabled={busy}
+        onClick={() => void resolve('dismiss')}
+      >
+        {t('dismiss')}
       </Button>
-      <Button size="sm" onClick={() => void resolve('remove')}>
-        Retirer
+      <Button type="button" size="sm" disabled={busy} onClick={() => void resolve('remove')}>
+        {t('remove')}
       </Button>
-      {message ? <p className="w-full text-sm text-[var(--dc-color-muted)]">{message}</p> : null}
+      {feedback ? (
+        <Alert className="w-full" variant={feedback.variant}>
+          {feedback.message}
+        </Alert>
+      ) : null}
     </div>
   );
 }

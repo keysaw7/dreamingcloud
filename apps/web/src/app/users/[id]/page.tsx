@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { Avatar, Button, Card, PageShell } from '@dreamingcloud/ui';
+import { PageShell } from '@dreamingcloud/ui';
 
+import { ProfileHero } from '../../../components/profile-hero';
+import { Button } from '../../../components/ui/button';
 import { AspirationList } from '../../../features/aspirations/aspiration-list';
 import { apiFetchServer } from '../../../lib/api-server';
 import type { ApiItemResponse, AspirationListItem } from '../../../lib/types';
@@ -24,8 +26,8 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   const t = await getTranslations('profile');
   const aspirations = await getTranslations('aspirations');
   const nav = await getTranslations('nav');
-
   let profile: ProfileData | null = null;
+
   try {
     const response = await apiFetchServer<ApiItemResponse<ProfileData>>(`/users/${id}`);
     profile = response.data;
@@ -33,9 +35,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
     notFound();
   }
 
-  if (!profile) {
-    notFound();
-  }
+  if (!profile) notFound();
 
   let avatarUrl: string | null = null;
   if (profile.avatarMediaId) {
@@ -50,43 +50,34 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   }
 
   return (
-    <PageShell maxWidth="lg" className="max-w-[48rem]">
-      <Card variant="flush">
-        <div className="bg-[linear-gradient(135deg,var(--dc-color-primary-soft),var(--dc-color-surface))] px-6 py-6">
-          <div className="flex flex-wrap items-start gap-4">
-            <Avatar name={profile.displayName} src={avatarUrl} size="xl" />
-            <div className="min-w-0 flex-1">
-              <h1 className="text-3xl font-semibold tracking-tight">{profile.displayName}</h1>
-              <p className="mt-1 text-sm text-[var(--dc-color-muted)]">@{profile.username}</p>
-              <p className="mt-4 whitespace-pre-wrap text-[var(--dc-color-ink-soft)]">
-                {profile.bio ?? t('noBio')}
-              </p>
-              <p className="mt-4 text-sm text-[var(--dc-color-muted)]">
-                {t('followers', { count: profile.followersCount })} ·{' '}
-                {t('following', { count: profile.followingCount })}
-              </p>
-              <div className="mt-4">
-                <FollowButton userId={profile.id} />
-              </div>
-            </div>
-          </div>
+    <PageShell maxWidth="lg">
+      <ProfileHero
+        avatarUrl={avatarUrl}
+        displayName={profile.displayName}
+        username={profile.username}
+      >
+        <p className="mt-4 whitespace-pre-wrap text-muted-foreground leading-relaxed">
+          {profile.bio ?? t('noBio')}
+        </p>
+        <p className="mt-5 text-muted-foreground text-sm">
+          {t('followers', { count: profile.followersCount })} ·{' '}
+          {t('following', { count: profile.followingCount })}
+        </p>
+        <div className="mt-5">
+          <FollowButton userId={profile.id} />
         </div>
-      </Card>
-
-      <section className="mt-8 space-y-4">
-        <h2 className="text-xl font-semibold tracking-tight">{t('publishedAspirations')}</h2>
+      </ProfileHero>
+      <section className="mt-10 max-w-2xl space-y-4">
+        <h2 className="font-semibold text-xl tracking-tight">{t('publishedAspirations')}</h2>
         <AspirationList
-          items={profile.aspirations}
           emptyTitle={t('emptyPublic')}
+          items={profile.aspirations}
           progressLabel={aspirations('progress')}
         />
       </section>
-
-      <div className="mt-8">
-        <Link href="/">
-          <Button variant="ghost">{nav('discover')}</Button>
-        </Link>
-      </div>
+      <Button asChild className="mt-8" variant="ghost">
+        <Link href="/">{nav('discover')}</Link>
+      </Button>
     </PageShell>
   );
 }

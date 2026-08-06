@@ -11,7 +11,7 @@ export function Label({ className, children, htmlFor, ...props }: LabelProps) {
   return (
     <label
       htmlFor={htmlFor}
-      className={cn('block text-sm font-medium text-[var(--dc-color-ink)]', className)}
+      className={cn('block font-medium text-[var(--dc-color-ink)] text-sm', className)}
       {...props}
     >
       {children}
@@ -33,9 +33,9 @@ export function Field({ label, htmlFor, hint, error, children, className }: Fiel
     <div className={cn('space-y-1.5', className)}>
       <Label htmlFor={htmlFor}>{label}</Label>
       {children}
-      {hint && !error ? <p className="text-xs text-[var(--dc-color-muted)]">{hint}</p> : null}
+      {hint && !error ? <p className="text-[var(--dc-color-muted)] text-xs">{hint}</p> : null}
       {error ? (
-        <p className="text-sm text-[var(--dc-color-danger)]" role="alert">
+        <p className="text-[var(--dc-color-danger)] text-sm" role="alert">
           {error}
         </p>
       ) : null}

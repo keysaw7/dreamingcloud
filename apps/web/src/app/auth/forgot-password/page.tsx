@@ -3,12 +3,16 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { Alert, Button, Card, Field, Input, PageShell } from '@dreamingcloud/ui';
 
+import { AuthLayout } from '../../../components/auth-layout';
+import { Alert } from '../../../components/ui/alert';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
 import { requestPasswordReset } from '../../../lib/api/auth';
 
 export default function ForgotPasswordPage() {
   const t = useTranslations('auth');
+  const common = useTranslations('common');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -23,40 +27,41 @@ export default function ForgotPasswordPage() {
       await requestPasswordReset(email);
       setMessage(t('forgotSuccess'));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Demande impossible');
+      setError(err instanceof Error ? err.message : common('errorGeneric'));
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <PageShell maxWidth="sm">
-      <Card>
-        <h1 className="text-2xl font-semibold">{t('forgotTitle')}</h1>
-        <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-          <Field label={t('email')} htmlFor="forgot-email">
-            <Input
-              id="forgot-email"
-              type="email"
-              value={email}
-              disabled={busy}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              autoComplete="email"
-            />
-          </Field>
-          {error ? <Alert variant="danger">{error}</Alert> : null}
-          {message ? <Alert variant="success">{message}</Alert> : null}
-          <Button type="submit" className="w-full" disabled={busy}>
-            {t('forgotSubmit')}
-          </Button>
-        </form>
-        <p className="mt-4 text-sm">
-          <Link href="/auth/login" className="underline">
-            {t('loginTitle')}
-          </Link>
-        </p>
-      </Card>
-    </PageShell>
+    <AuthLayout
+      brand={common('appName')}
+      footer={
+        <Link className="font-semibold text-primary hover:underline" href="/auth/login">
+          {t('loginTitle')}
+        </Link>
+      }
+      title={t('forgotTitle')}
+    >
+      <form className="space-y-5" onSubmit={onSubmit}>
+        <label className="grid gap-2 font-medium text-sm" htmlFor="forgot-email">
+          {t('email')}
+          <Input
+            autoComplete="email"
+            disabled={busy}
+            id="forgot-email"
+            required
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+        </label>
+        {error ? <Alert variant="destructive">{error}</Alert> : null}
+        {message ? <Alert variant="success">{message}</Alert> : null}
+        <Button className="w-full" disabled={busy} type="submit">
+          {t('forgotSubmit')}
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }

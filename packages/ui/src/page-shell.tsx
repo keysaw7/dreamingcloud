@@ -42,12 +42,12 @@ export function PageShell({
   actions,
 }: PageShellProps) {
   return (
-    <main className={cn(pageShellVariants({ maxWidth, padded }), className)}>
+    <div className={cn(pageShellVariants({ maxWidth, padded }), className)}>
       {title || description || actions ? (
         <header className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
             {title ? (
-              <h1 className="text-3xl font-semibold tracking-tight text-[var(--dc-color-ink)]">
+              <h1 className="font-semibold text-3xl text-[var(--dc-color-ink)] tracking-tight">
                 {title}
               </h1>
             ) : null}
@@ -59,6 +59,6 @@ export function PageShell({
         </header>
       ) : null}
       {children}
-    </main>
+    </div>
   );
 }

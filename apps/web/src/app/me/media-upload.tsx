@@ -64,8 +64,8 @@ export function MediaUpload() {
   }
 
   return (
-    <div className="mt-6 space-y-3 border-t border-[var(--dc-color-border)] pt-6">
-      <h2 className="text-lg font-medium">Médias</h2>
+    <div className="mt-6 space-y-3 border-[var(--dc-color-border)] border-t pt-6">
+      <h2 className="font-medium text-lg">Médias</h2>
       <label className="block text-sm" htmlFor="media-upload">
         Ajouter une image
         <input
