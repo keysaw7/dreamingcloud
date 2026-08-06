@@ -12,5 +12,8 @@
   },
   "dependencies": {
     "@dreamingcloud/api": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
   }
 }

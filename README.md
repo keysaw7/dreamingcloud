@@ -59,12 +59,15 @@ Mot de passe commun : `DemoPass123!`
 | Commande | Description |
 | --- | --- |
 | `pnpm dev` | API + web + worker en parallèle |
+| `pnpm verify` | Rejoue le pipeline CI local (migrate + lint + build + typecheck + test) |
 | `pnpm lint` | Biome + garde-fous d’architecture |
 | `pnpm typecheck` | Vérification TypeScript |
 | `pnpm test` | Tests unitaires et d’intégration |
-| `pnpm db:migrate` | Applique `apps/api/drizzle/*.sql` |
+| `pnpm db:migrate` | Applique `apps/api/drizzle/*.sql` et vérifie les tables MVP |
 | `pnpm db:seed` | Charge les comptes et contenus de démo |
 | `pnpm --filter @dreamingcloud/web test:e2e` | Parcours Playwright (API + web déjà démarrés) |
+
+Si `pnpm dev` échoue parce qu’un Next.js est déjà actif sur `apps/web`, arrêtez le PID indiqué (`kill <pid>`) puis relancez. Ne lancez pas deux `next dev` sur le même dossier.
 
 ## Architecture
 

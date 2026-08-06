@@ -11,6 +11,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const migrationsDirectory = join(__dirname, '../drizzle');
 const databaseUrl = process.env.DATABASE_URL;
 
+const mvpTables = [
+  'aspirations',
+  'auth_sessions',
+  'contributions',
+  'conversation_participants',
+  'messages',
+  'outbox_events',
+  'users',
+];
+
 if (!databaseUrl) {
   console.error('DATABASE_URL is required. Place it in the monorepo root .env (see .env.example).');
   process.exit(1);
@@ -19,7 +29,15 @@ if (!databaseUrl) {
 const files = (await readdir(migrationsDirectory)).filter((name) => name.endsWith('.sql')).sort();
 
 const client = new pg.Client({ connectionString: databaseUrl });
-await client.connect();
+
+try {
+  await client.connect();
+} catch (error) {
+  console.error(
+    `Failed to connect to Postgres at DATABASE_URL. Is the service up?\n${error instanceof Error ? error.message : error}`,
+  );
+  process.exit(1);
+}
 
 try {
   await client.query(`
@@ -48,9 +66,32 @@ try {
       console.log(`applied ${file}`);
     } catch (error) {
       await client.query('ROLLBACK');
+      console.error(
+        `Migration failed for ${file}:`,
+        error instanceof Error ? error.message : error,
+      );
       throw error;
     }
   }
+
+  const result = await client.query(
+    `SELECT table_name
+     FROM information_schema.tables
+     WHERE table_schema = 'public'
+       AND table_name = ANY($1::text[])
+     ORDER BY table_name`,
+    [mvpTables],
+  );
+
+  const found = result.rows.map((row) => row.table_name);
+  const missing = mvpTables.filter((table) => !found.includes(table));
+
+  if (missing.length > 0) {
+    console.error(`MVP tables missing after migrations: ${missing.join(', ')}`);
+    process.exit(1);
+  }
+
+  console.log(`MVP tables verified: ${found.join(', ')}`);
 } finally {
   await client.end();
 }

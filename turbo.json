@@ -5,6 +5,10 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
+    "@dreamingcloud/worker#build": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
     "dev": {
       "dependsOn": ["^build"],
       "cache": false,
@@ -16,7 +20,7 @@
     },
     "test": {
       "dependsOn": ["^build"],
-      "outputs": ["coverage/**"]
+      "outputs": []
     },
     "typecheck": {
       "dependsOn": ["^build"],

@@ -17,7 +17,7 @@ export async function startPostgresContainer(): Promise<PostgresTestEnvironment>
       POSTGRES_DB: 'dreamingcloud',
     })
     .withExposedPorts(5432)
-    .withWaitStrategy(Wait.forLogMessage('database system is ready to accept connections'))
+    .withWaitStrategy(Wait.forLogMessage('database system is ready to accept connections', 2))
     .start();
 
   const host = container.getHost();

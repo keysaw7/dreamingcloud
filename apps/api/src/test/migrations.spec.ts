@@ -7,18 +7,15 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const migrationsDirectory = join(__dirname, '../../drizzle');
 
-describe('SQL migrations', () => {
+// CI validates migrations via `db:migrate:sql` against the Postgres service.
+// This suite is reserved for local Testcontainers isolation.
+describe.skipIf(Boolean(process.env.CI))('SQL migrations', () => {
   let stop: (() => Promise<void>) | undefined;
   let connectionString = '';
+  let setupError: unknown;
 
   beforeAll(async () => {
-    // CI already provides a migrated Postgres service via DATABASE_URL.
-    if (process.env.CI && process.env.DATABASE_URL) {
-      connectionString = process.env.DATABASE_URL;
-      return;
-    }
-
-    if (!process.env.CI && process.env.SKIP_TESTCONTAINERS === '1') {
+    if (process.env.SKIP_TESTCONTAINERS === '1') {
       return;
     }
 
@@ -28,10 +25,7 @@ describe('SQL migrations', () => {
       connectionString = environment.connectionString;
       await applySqlMigrations(connectionString, migrationsDirectory);
     } catch (error) {
-      if (process.env.CI) {
-        throw error;
-      }
-      // Local environments without Docker/testcontainers skip the suite.
+      setupError = error;
       connectionString = '';
     }
   }, 120_000);
@@ -40,21 +34,32 @@ describe('SQL migrations', () => {
     await stop?.();
   });
 
-  it('creates core MVP tables', async () => {
+  it.skipIf(process.env.SKIP_TESTCONTAINERS === '1')('creates core MVP tables', async () => {
     if (!connectionString) {
-      return;
+      const details =
+        setupError instanceof Error ? setupError.message : String(setupError ?? 'unknown error');
+      throw new Error(
+        `Postgres Testcontainers unavailable. Start Docker, or set SKIP_TESTCONTAINERS=1 to skip intentionally. Cause: ${details}`,
+      );
     }
 
     const client = new Client({ connectionString });
-    await client.connect();
+
+    try {
+      await client.connect();
+    } catch (error) {
+      throw new Error(
+        `Failed to connect to Testcontainers Postgres: ${error instanceof Error ? error.message : error}`,
+      );
+    }
 
     try {
       const result = await client.query<{ table_name: string }>(
         `SELECT table_name
-         FROM information_schema.tables
-         WHERE table_schema = 'public'
-           AND table_name = ANY($1::text[])
-         ORDER BY table_name`,
+           FROM information_schema.tables
+           WHERE table_schema = 'public'
+             AND table_name = ANY($1::text[])
+           ORDER BY table_name`,
         [
           [
             'users',

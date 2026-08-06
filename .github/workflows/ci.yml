@@ -50,8 +50,64 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @dreamingcloud/api db:migrate:sql
+      - name: Check pnpm policy
+        run: |
+          set -euo pipefail
+          echo "node: $(node -v)"
+          echo "pnpm: $(pnpm -v)"
+          test "$(pnpm -v)" = "11.18.0"
+          node <<'NODE'
+          const { readFileSync } = require('node:fs');
+          const yaml = readFileSync('pnpm-workspace.yaml', 'utf8');
+          const required = [
+            '@parcel/watcher',
+            '@swc/core',
+            'argon2',
+            'cpu-features',
+            'esbuild',
+            'msgpackr-extract',
+            'protobufjs',
+            'sharp',
+            'ssh2',
+          ];
+          const missing = required.filter((name) => {
+            const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return !new RegExp(`(^|\\n)\\s*'?${escaped}'?\\s*:\\s*true\\s*($|\\n)`, 'm').test(yaml);
+          });
+          if (missing.length > 0) {
+            console.error('Missing allowBuilds approvals:', missing.join(', '));
+            process.exit(1);
+          }
+          console.log('allowBuilds policy OK for:', required.join(', '));
+          NODE
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Wait for Postgres
+        working-directory: apps/api
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 30); do
+            if node -e "
+              const { Client } = require('pg');
+              const client = new Client({ connectionString: process.env.DATABASE_URL });
+              client.connect()
+                .then(() => client.query('select 1'))
+                .then(() => client.end())
+                .catch((error) => {
+                  console.error(error.message);
+                  process.exit(1);
+                });
+            "; then
+              echo "Postgres is ready"
+              exit 0
+            fi
+            echo "Postgres not ready (attempt ${attempt}/30), retrying..."
+            sleep 2
+          done
+          echo "::error::Postgres service did not become ready"
+          exit 1
+      - name: Apply and verify SQL migrations
+        run: pnpm --filter @dreamingcloud/api db:migrate:sql
       - run: pnpm lint
       - run: pnpm build
       - run: pnpm typecheck
