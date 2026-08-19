@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import { PageShell, Separator } from '@dreamingcloud/ui';
+import { Badge, PageShell, Separator } from '@dreamingcloud/ui';
 
 import { ProfileHero } from '../../components/profile-hero';
 import { Button } from '../../components/ui/button';
@@ -24,32 +24,26 @@ export default async function MePage() {
     );
   }
 
+  const statusLabel = t.has(`statusValues.${me.status}`)
+    ? t(`statusValues.${me.status}`)
+    : me.status;
+
   return (
     <PageShell maxWidth="md" title={t('title')}>
       <ProfileHero displayName={me.displayName} headingLevel="h2" username={me.username}>
         <p className="mt-4 whitespace-pre-wrap text-muted-foreground leading-relaxed">
           {me.bio ?? t('noBio')}
         </p>
-        <div className="mt-5 flex flex-wrap gap-2 text-sm">
-          <span className="rounded-full bg-accent px-3 py-1 font-medium text-accent-foreground">
-            {t('status')}: {me.status}
-          </span>
-          {me.role === 'admin' ? (
-            <span className="rounded-full bg-warning/15 px-3 py-1 font-medium text-warning-foreground">
-              {nav('admin')}
-            </span>
-          ) : null}
+        <div className="mt-5 flex flex-wrap gap-2">
+          <Badge>
+            {t('status')}: {statusLabel}
+          </Badge>
+          {me.role === 'admin' ? <Badge variant="warning">{nav('admin')}</Badge> : null}
         </div>
       </ProfileHero>
       <div className="mt-8 flex flex-wrap gap-3">
         <Button asChild variant="outline">
           <Link href={`/users/${me.username}`}>{t('publicProfile')}</Link>
-        </Button>
-        <Button asChild variant="outline">
-          <Link href="/notifications">{nav('notifications')}</Link>
-        </Button>
-        <Button asChild>
-          <Link href="/aspirations/new">{nav('newAspiration')}</Link>
         </Button>
         {me.role === 'admin' ? (
           <Button asChild variant="outline">
@@ -57,7 +51,7 @@ export default async function MePage() {
           </Button>
         ) : null}
       </div>
-      <div className="mt-8 space-y-8">
+      <div className="mt-10 space-y-8">
         <Separator />
         <ProfileEditor initialBio={me.bio ?? ''} initialDisplayName={me.displayName} />
         <MediaUpload />

@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
+import { pageShellVariants } from '../../components/ui/page-shell';
 import { cn } from '../../lib/utils';
 
 export function FeedLayout({
@@ -22,15 +23,15 @@ export function FeedLayout({
   aside?: ReactNode;
 }>) {
   return (
-    <div className="mx-auto grid max-w-6xl gap-10 xl:grid-cols-[minmax(0,42rem)_16rem] xl:items-start">
-      <div className="min-w-0 space-y-6">
-        <header className="max-w-2xl">
-          <p className="mb-3 font-semibold text-primary text-sm uppercase tracking-wide">
-            DreamingCloud
-          </p>
-          <h1 className="text-balance font-semibold text-3xl tracking-tight sm:text-4xl">
-            {title}
-          </h1>
+    <div
+      className={cn(
+        pageShellVariants({ maxWidth: 'xl' }),
+        aside && 'grid gap-10 xl:grid-cols-[minmax(0,1fr)_16rem] xl:items-start',
+      )}
+    >
+      <div className="min-w-0 max-w-2xl space-y-6">
+        <header>
+          <h1 className="text-balance font-semibold text-3xl tracking-tight">{title}</h1>
           {description ? (
             <p className="mt-3 max-w-xl text-base text-muted-foreground leading-relaxed">
               {description}
@@ -41,7 +42,7 @@ export function FeedLayout({
         {composer}
         {children}
       </div>
-      {aside ? <aside className="hidden space-y-5 xl:block">{aside}</aside> : null}
+      {aside ? <aside className="min-w-0 space-y-5">{aside}</aside> : null}
     </div>
   );
 }
@@ -54,14 +55,14 @@ export function FeedTabs({
   items: readonly { id: string; label: string; href: string; active: boolean }[];
 }>) {
   return (
-    <nav aria-label={ariaLabel} className="inline-flex rounded-md bg-muted p-1">
+    <nav aria-label={ariaLabel} className="flex max-w-full overflow-x-auto rounded-md bg-muted p-1">
       {items.map((item) => (
         <Link
           key={item.id}
           href={item.href}
           aria-current={item.active ? 'page' : undefined}
           className={cn(
-            'min-h-10 rounded-sm px-4 py-2 font-semibold text-sm transition-colors',
+            'min-h-10 shrink-0 rounded-sm px-4 py-2 font-semibold text-sm transition-colors',
             item.active
               ? 'bg-card text-foreground shadow-sm'
               : 'text-muted-foreground hover:text-foreground',

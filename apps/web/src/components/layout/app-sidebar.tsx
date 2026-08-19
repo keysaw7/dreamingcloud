@@ -3,16 +3,13 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '../ui/button';
+import { Avatar } from '../ui/legacy-primitives';
 import { cn } from '../../lib/utils';
 import type { CurrentUser } from '../../lib/types';
 import { isActive, type NavigationItem } from './navigation';
 
-function UserAvatar({ user }: Readonly<{ user: CurrentUser }>) {
-  return (
-    <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-accent font-semibold text-accent-foreground text-sm">
-      {user.displayName.slice(0, 1).toUpperCase()}
-    </span>
-  );
+function isCreateDestination(href: string) {
+  return href === '/aspirations/new' || href === '/auth/register';
 }
 
 export function AppSidebar({
@@ -30,13 +27,13 @@ export function AppSidebar({
   const common = useTranslations('common');
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-border border-r bg-background lg:block">
-      <div className="flex h-full flex-col px-5 py-6">
+      <div className="flex h-full flex-col overflow-y-auto px-5 py-6">
         <Link href="/" className="mb-10 font-semibold text-lg tracking-tight">
           {common('appName')}
         </Link>
         <nav aria-label={t('primaryNav')} className="flex flex-1 flex-col gap-1">
           {navigation
-            .filter((item) => item.visible)
+            .filter((item) => item.visible && !isCreateDestination(item.href))
             .map(({ href, icon: Icon, label }) => (
               <Link
                 key={href}
@@ -61,14 +58,15 @@ export function AppSidebar({
             </Link>
           </Button>
           {user ? (
-            <div className="mt-5 flex items-center gap-3">
-              <UserAvatar user={user} />
-              <div className="min-w-0 flex-1">
+            <div className="mt-5 flex items-center gap-2">
+              <Avatar name={user.displayName} size="md" />
+              <div className="min-w-0">
                 <p className="truncate font-semibold text-sm">{user.displayName}</p>
                 <p className="truncate text-muted-foreground text-xs">@{user.username}</p>
               </div>
               <Button
                 aria-label={common('logout')}
+                className="shrink-0"
                 size="icon-sm"
                 variant="ghost"
                 onClick={onLogout}

@@ -24,7 +24,7 @@ export default async function NotificationsPage() {
 
   if (!user) {
     return (
-      <PageShell title={t('title')} maxWidth="lg">
+      <PageShell title={t('title')} description={t('description')} maxWidth="lg">
         <AuthGate title={t('loginPrompt')} loginLabel={nav('login')} />
       </PageShell>
     );
@@ -40,7 +40,7 @@ export default async function NotificationsPage() {
   }
 
   return (
-    <PageShell title={t('title')} maxWidth="lg">
+    <PageShell title={t('title')} description={t('description')} maxWidth="lg">
       {error ? (
         <Alert variant="destructive">{error}</Alert>
       ) : (

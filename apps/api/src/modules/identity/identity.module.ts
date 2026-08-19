@@ -5,12 +5,14 @@ import { LoginUserUseCase } from './application/commands/login-user.use-case';
 import { LogoutUserUseCase } from './application/commands/logout-user.use-case';
 import { RefreshSessionUseCase } from './application/commands/refresh-session.use-case';
 import { RegisterUserUseCase } from './application/commands/register-user.use-case';
+import { RequestEmailCodeUseCase } from './application/commands/request-email-code.use-case';
 import { RequestPasswordResetUseCase } from './application/commands/request-password-reset.use-case';
 import { ResetPasswordUseCase } from './application/commands/reset-password.use-case';
 import { UpdateProfileUseCase } from './application/commands/update-profile.use-case';
 import { VerifyEmailUseCase } from './application/commands/verify-email.use-case';
 import { GetCurrentUserQuery } from './application/queries/get-current-user.query';
 import { GetPublicProfileQuery } from './application/queries/get-public-profile.query';
+import { EMAIL_OTP_REPOSITORY } from './domain/ports/email-otp.repository';
 import { MAILER } from './domain/ports/mailer';
 import { PASSWORD_HASHER } from './domain/ports/password-hasher';
 import { SESSION_REPOSITORY } from './domain/ports/session.repository';
@@ -21,6 +23,7 @@ import { Argon2PasswordHasher } from './infrastructure/crypto/argon2-password-ha
 import { JoseTokenService } from './infrastructure/crypto/jose-token-service';
 import { ConsoleMailer } from './infrastructure/email/console-mailer';
 import { ResendMailer } from './infrastructure/email/resend-mailer';
+import { DrizzleEmailOtpRepository } from './infrastructure/persistence/drizzle-email-otp.repository';
 import { DrizzleSessionRepository } from './infrastructure/persistence/drizzle-session.repository';
 import { DrizzleTokenRepository } from './infrastructure/persistence/drizzle-token.repository';
 import { DrizzleUserRepository } from './infrastructure/persistence/drizzle-user.repository';
@@ -35,6 +38,7 @@ import type { Mailer } from './domain/ports/mailer';
   controllers: [AuthController, UsersController],
   providers: [
     RegisterUserUseCase,
+    RequestEmailCodeUseCase,
     LoginUserUseCase,
     LogoutUserUseCase,
     RefreshSessionUseCase,
@@ -48,6 +52,7 @@ import type { Mailer } from './domain/ports/mailer';
     { provide: USER_REPOSITORY, useClass: DrizzleUserRepository },
     { provide: SESSION_REPOSITORY, useClass: DrizzleSessionRepository },
     { provide: TOKEN_REPOSITORY, useClass: DrizzleTokenRepository },
+    { provide: EMAIL_OTP_REPOSITORY, useClass: DrizzleEmailOtpRepository },
     { provide: PASSWORD_HASHER, useClass: Argon2PasswordHasher },
     { provide: TOKEN_SERVICE, useClass: JoseTokenService },
     {

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
-import { Alert, Badge, Button, Card, Field, Select, Textarea } from '@dreamingcloud/ui';
+import { Alert, Badge, Button, Card, EmptyState, Field, Select, Textarea } from '@dreamingcloud/ui';
 
 import { listComments, listContributions } from '../../../lib/api/aspirations';
 import { apiFetch } from '../../../lib/api';
@@ -38,10 +38,12 @@ const REPORT_REASONS = [
 export function AspirationActions({
   aspirationId,
   ownerId,
+  ownerUsername,
   needs,
 }: {
   aspirationId: string;
   ownerId: string;
+  ownerUsername?: string | null;
   needs: readonly NeedItem[];
 }) {
   const t = useTranslations('contribution');
@@ -230,8 +232,8 @@ export function AspirationActions({
   if (!authChecked) {
     return (
       <div aria-busy="true" className="space-y-3">
-        <div className="h-12 animate-pulse rounded-[var(--dc-radius-lg)] bg-[var(--dc-color-surface-muted)]" />
-        <div className="h-28 animate-pulse rounded-[var(--dc-radius-lg)] bg-[var(--dc-color-surface-muted)]" />
+        <div className="h-12 animate-pulse rounded-lg bg-muted" />
+        <div className="h-28 animate-pulse rounded-lg bg-muted" />
       </div>
     );
   }
@@ -239,31 +241,42 @@ export function AspirationActions({
   return (
     <div className="space-y-6">
       {currentUserId ? (
-        <div className="flex flex-wrap gap-3 rounded-[var(--dc-radius-lg)] border border-[var(--dc-color-border)] bg-[var(--dc-color-surface-muted)] p-4">
-          <Button asChild variant="ghost" disabled={busy}>
-            <Link href={`/users/${ownerId}`}>{aspirations('viewOwner')}</Link>
+        <div className="flex flex-wrap items-center gap-3 rounded-lg bg-muted p-4">
+          <Button asChild size="sm" variant="ghost" disabled={busy}>
+            <Link href={`/users/${ownerUsername || ownerId}`}>{aspirations('viewOwner')}</Link>
           </Button>
           {!isOwner ? (
-            <Button variant="ghost" disabled={busy} onClick={() => void followOwner(ownerId)}>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={busy}
+              onClick={() => void followOwner(ownerId)}
+            >
               {social('follow')}
             </Button>
           ) : null}
-          <Button disabled={busy} onClick={() => void support()}>
+          <Button size="sm" disabled={busy} onClick={() => void support()}>
             {common('support')}
           </Button>
           {canPropose ? (
             <Button
-              variant="secondary"
+              size="sm"
+              variant="ghost"
               disabled={busy}
               onClick={() => setShowPropose((value) => !value)}
             >
               {aspirations('proposeHelp')}
             </Button>
           ) : null}
-          <Button variant="ghost" disabled={busy} onClick={() => void save()}>
+          <Button size="sm" variant="ghost" disabled={busy} onClick={() => void save()}>
             {social('save')}
           </Button>
-          <Button variant="ghost" disabled={busy} onClick={() => setShowReport((value) => !value)}>
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={busy}
+            onClick={() => setShowReport((value) => !value)}
+          >
             {social('report')}
           </Button>
         </div>
@@ -387,21 +400,21 @@ export function AspirationActions({
       <section className="space-y-3">
         <h2 className="font-semibold text-lg">{aspirations('commentsTitle')}</h2>
         {comments.length === 0 ? (
-          <p className="text-[var(--dc-color-muted)] text-sm">{aspirations('commentsEmpty')}</p>
+          <EmptyState
+            title={aspirations('commentsEmpty')}
+            description={aspirations('commentsEmptyDescription')}
+          />
         ) : (
           comments.map((item) => (
-            <div
-              key={item.id}
-              className="rounded-[var(--dc-radius-md)] border border-[var(--dc-color-border)] bg-[var(--dc-color-surface)] p-3"
-            >
+            <div key={item.id} className="rounded-md bg-muted p-3">
               <p className="text-sm">
                 <Link
                   href={`/users/${item.authorUsername}`}
-                  className="font-medium text-[var(--dc-color-primary)] hover:underline"
+                  className="font-medium text-primary hover:underline"
                 >
                   {item.authorDisplayName}
                 </Link>
-                <span className="text-[var(--dc-color-muted)]">
+                <span className="text-muted-foreground">
                   {' '}
                   · {formatRelativeDate(item.createdAt)}
                 </span>
@@ -433,10 +446,8 @@ export function AspirationActions({
                     {item.contributionType} · {item.status}
                   </span>
                 </div>
-                <p className="text-[var(--dc-color-muted)] text-sm">{item.description}</p>
-                {confirmHint ? (
-                  <p className="text-[var(--dc-color-primary)] text-sm">{confirmHint}</p>
-                ) : null}
+                <p className="text-muted-foreground text-sm">{item.description}</p>
+                {confirmHint ? <p className="text-primary text-sm">{confirmHint}</p> : null}
                 <div className="flex flex-wrap gap-2">
                   {item.status === 'proposed' && actorIsOwner ? (
                     <>

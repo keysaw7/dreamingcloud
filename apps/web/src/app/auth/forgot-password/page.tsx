@@ -35,7 +35,6 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthLayout
-      brand={common('appName')}
       footer={
         <Link className="font-semibold text-primary hover:underline" href="/auth/login">
           {t('loginTitle')}

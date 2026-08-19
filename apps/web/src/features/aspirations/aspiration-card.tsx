@@ -4,6 +4,7 @@ import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
+import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
 import { formatRelativeDate, needTypeLabel } from '../../lib/format';
 import type { AspirationListItem } from '../../lib/types';
@@ -69,7 +70,7 @@ export function AspirationCard({
       </div>
       <Link className="block px-5 py-5" href={href}>
         <div className="flex items-start justify-between gap-4">
-          <h2 className="font-semibold text-xl tracking-tight transition-colors group-hover:text-primary">
+          <h2 className="min-w-0 break-words font-semibold text-xl tracking-tight transition-colors group-hover:text-primary">
             {item.title}
           </h2>
           <ArrowUpRight
@@ -107,9 +108,5 @@ export function AspirationCard({
 }
 
 export function NeedBadge({ needType }: Readonly<{ needType: string }>) {
-  return (
-    <span className="rounded-full bg-muted px-2.5 py-1 font-medium text-xs">
-      {needTypeLabel(needType)}
-    </span>
-  );
+  return <Badge variant="secondary">{needTypeLabel(needType)}</Badge>;
 }

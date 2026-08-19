@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { UniqueId } from '@dreamingcloud/shared-kernel';
 
+import { IdentityModule } from '../identity/identity.module';
 import { AddMilestoneUseCase } from './application/commands/add-milestone.use-case';
 import { AddNeedUseCase } from './application/commands/add-need.use-case';
 import { CreateDraftUseCase } from './application/commands/create-draft.use-case';
@@ -13,6 +14,7 @@ import { AspirationsController } from './presentation/http/aspirations.controlle
 import { ASPIRATIONS_PUBLIC_API } from './aspirations.public';
 
 @Module({
+  imports: [IdentityModule],
   controllers: [AspirationsController],
   providers: [
     CreateDraftUseCase,

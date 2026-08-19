@@ -2,7 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import { and, desc, eq, sql } from 'drizzle-orm';
 
 import { DATABASE, type Database } from '../../../../platform/database/database.types';
-import { aspirations, impactScores } from '../../../../platform/database/schema';
+import {
+  aspirations,
+  impactScores,
+  userProfiles,
+  users,
+} from '../../../../platform/database/schema';
 import {
   createCursorPage,
   type CursorPage,
@@ -12,6 +17,8 @@ import {
 export interface FeedItem {
   readonly id: string;
   readonly ownerId: string;
+  readonly ownerUsername: string | null;
+  readonly ownerDisplayName: string | null;
   readonly title: string;
   readonly slug: string;
   readonly story: string;
@@ -57,6 +64,8 @@ export class ListDiscoverFeedQuery {
       .select({
         id: aspirations.id,
         ownerId: aspirations.ownerId,
+        ownerUsername: users.username,
+        ownerDisplayName: userProfiles.displayName,
         title: aspirations.title,
         slug: aspirations.slug,
         story: aspirations.story,
@@ -72,6 +81,8 @@ export class ListDiscoverFeedQuery {
           eq(impactScores.aggregateId, aspirations.id),
         ),
       )
+      .leftJoin(users, eq(users.id, aspirations.ownerId))
+      .leftJoin(userProfiles, eq(userProfiles.userId, aspirations.ownerId))
       .where(and(...filters))
       .orderBy(desc(scoreExpr), desc(aspirations.publishedAt), desc(aspirations.id))
       .limit(input.limit + 1);
@@ -79,6 +90,8 @@ export class ListDiscoverFeedQuery {
     const items: FeedItem[] = rows.map((row) => ({
       id: row.id,
       ownerId: row.ownerId,
+      ownerUsername: row.ownerUsername ?? null,
+      ownerDisplayName: row.ownerDisplayName ?? null,
       title: row.title,
       slug: row.slug,
       story: row.story,

@@ -3,6 +3,7 @@ import { PageShell } from '@dreamingcloud/ui';
 
 import { Alert } from '../../../components/ui/alert';
 import { Card } from '../../../components/ui/card';
+import { EmptyState } from '../../../components/ui/empty-state';
 import { apiFetchServer } from '../../../lib/api-server';
 import { formatRelativeDate } from '../../../lib/format';
 import type { ApiListResponse, MessageItem } from '../../../lib/types';
@@ -29,13 +30,11 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         {error ? (
           <Alert variant="destructive">{error}</Alert>
         ) : messages.length === 0 ? (
-          <p className="text-muted-foreground text-sm" role="status">
-            {t('noMessages')}
-          </p>
+          <EmptyState title={t('noMessages')} />
         ) : (
           <div className="space-y-3">
             {messages.map((message) => (
-              <div key={message.id} className="rounded-lg border border-border bg-muted p-3">
+              <div key={message.id} className="rounded-lg bg-muted p-3">
                 <p className="text-muted-foreground text-xs">
                   {formatRelativeDate(message.createdAt)}
                 </p>

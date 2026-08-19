@@ -1,23 +1,21 @@
 import type { ReactNode } from 'react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { pageShellVariants } from './ui/page-shell';
 
 export function AuthLayout({
-  brand,
   children,
   description,
   footer,
   title,
 }: Readonly<{
-  brand: ReactNode;
   title: ReactNode;
   description?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
 }>) {
   return (
-    <div className="mx-auto w-full max-w-md px-5 py-12 sm:py-20">
-      <p className="mb-8 text-center font-semibold tracking-tight">{brand}</p>
+    <div className={pageShellVariants({ maxWidth: 'sm' })}>
       <Card className="border border-border">
         <CardHeader>
           <CardTitle>{title}</CardTitle>

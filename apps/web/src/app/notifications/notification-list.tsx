@@ -75,7 +75,7 @@ export function NotificationList({ initialItems }: { initialItems: NotificationI
   }
 
   if (items.length === 0) {
-    return <EmptyState title={t('empty')} />;
+    return <EmptyState title={t('empty')} description={t('emptyDescription')} />;
   }
 
   return (

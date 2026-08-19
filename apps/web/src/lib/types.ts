@@ -31,8 +31,8 @@ export interface AspirationListItem {
   progressPercent: number;
   publishedAt: string | null;
   ownerId?: string;
-  ownerUsername?: string;
-  ownerDisplayName?: string;
+  ownerUsername?: string | null;
+  ownerDisplayName?: string | null;
 }
 
 export interface AspirationNeed {
@@ -61,8 +61,8 @@ export interface AspirationDetail {
   visibility?: string;
   needs: readonly AspirationNeed[];
   milestones: readonly AspirationMilestone[];
-  ownerUsername?: string;
-  ownerDisplayName?: string;
+  ownerUsername?: string | null;
+  ownerDisplayName?: string | null;
 }
 
 export interface ContributionItem {

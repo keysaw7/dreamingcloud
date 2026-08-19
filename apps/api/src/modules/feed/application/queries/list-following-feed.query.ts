@@ -2,7 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import { and, desc, eq, lt, or, sql } from 'drizzle-orm';
 
 import { DATABASE, type Database } from '../../../../platform/database/database.types';
-import { aspirations, feedEntries } from '../../../../platform/database/schema';
+import {
+  aspirations,
+  feedEntries,
+  userProfiles,
+  users,
+} from '../../../../platform/database/schema';
 import {
   createCursorPage,
   type CursorPage,
@@ -42,6 +47,8 @@ export class ListFollowingFeedQuery {
       .select({
         id: aspirations.id,
         ownerId: aspirations.ownerId,
+        ownerUsername: users.username,
+        ownerDisplayName: userProfiles.displayName,
         title: aspirations.title,
         slug: aspirations.slug,
         story: aspirations.story,
@@ -52,6 +59,8 @@ export class ListFollowingFeedQuery {
       })
       .from(feedEntries)
       .innerJoin(aspirations, eq(aspirations.id, feedEntries.aspirationId))
+      .leftJoin(users, eq(users.id, aspirations.ownerId))
+      .leftJoin(userProfiles, eq(userProfiles.userId, aspirations.ownerId))
       .where(and(...filters))
       .orderBy(desc(feedEntries.createdAt), desc(aspirations.id))
       .limit(input.limit + 1);
@@ -59,6 +68,8 @@ export class ListFollowingFeedQuery {
     const items: FeedItem[] = rows.map((row) => ({
       id: row.id,
       ownerId: row.ownerId,
+      ownerUsername: row.ownerUsername ?? null,
+      ownerDisplayName: row.ownerDisplayName ?? null,
       title: row.title,
       slug: row.slug,
       story: row.story,

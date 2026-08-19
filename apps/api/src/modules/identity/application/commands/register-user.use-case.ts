@@ -1,15 +1,17 @@
-import { ConflictException, Inject, Injectable } from '@nestjs/common';
-import { UniqueId } from '@dreamingcloud/shared-kernel';
+import { EMAIL_OTP_MAX_ATTEMPTS } from '@dreamingcloud/contracts';
+import { timingSafeEqual } from 'node:crypto';
+import { BadRequestException, ConflictException, Inject, Injectable } from '@nestjs/common';
+import type { UniqueId } from '@dreamingcloud/shared-kernel';
 
-import type { AppConfig } from '../../../../platform/config/app-config';
-import { APP_CONFIG } from '../../../../platform/config/config.module';
 import { TRANSACTION_MANAGER } from '../../../../platform/database/database.module';
 import type { TransactionManager } from '../../../../platform/database/database.types';
 import { EVENT_PUBLISHER, type EventPublisher } from '../../../../platform/events/event-publisher';
 import { User } from '../../domain/entities/user.entity';
+import {
+  EMAIL_OTP_REPOSITORY,
+  type EmailOtpRepository,
+} from '../../domain/ports/email-otp.repository';
 import { PASSWORD_HASHER, type PasswordHasher } from '../../domain/ports/password-hasher';
-import { MAILER, type Mailer } from '../../domain/ports/mailer';
-import { TOKEN_REPOSITORY, type TokenRepository } from '../../domain/ports/token.repository';
 import { TOKEN_SERVICE, type TokenService } from '../../domain/ports/token-service';
 import { USER_REPOSITORY, type UserRepository } from '../../domain/ports/user.repository';
 
@@ -18,6 +20,7 @@ export interface RegisterUserInput {
   readonly username: string;
   readonly displayName: string;
   readonly password: string;
+  readonly emailCode: string;
 }
 
 @Injectable()
@@ -26,15 +29,14 @@ export class RegisterUserUseCase {
     @Inject(USER_REPOSITORY) private readonly users: UserRepository,
     @Inject(PASSWORD_HASHER) private readonly passwordHasher: PasswordHasher,
     @Inject(TOKEN_SERVICE) private readonly tokenService: TokenService,
-    @Inject(TOKEN_REPOSITORY) private readonly tokens: TokenRepository,
-    @Inject(MAILER) private readonly mailer: Mailer,
+    @Inject(EMAIL_OTP_REPOSITORY) private readonly emailOtps: EmailOtpRepository,
     @Inject(EVENT_PUBLISHER) private readonly events: EventPublisher,
     @Inject(TRANSACTION_MANAGER) private readonly transactions: TransactionManager,
-    @Inject(APP_CONFIG) private readonly config: AppConfig,
   ) {}
 
   public async execute(input: RegisterUserInput): Promise<{ userId: string }> {
-    const existingEmail = await this.users.findByEmail(input.email);
+    const email = input.email.toLowerCase();
+    const existingEmail = await this.users.findByEmail(email);
     if (existingEmail) {
       throw new ConflictException('Un compte existe déjà avec cet e-mail.');
     }
@@ -44,34 +46,52 @@ export class RegisterUserUseCase {
       throw new ConflictException('Ce nom d’utilisateur est déjà pris.');
     }
 
+    const challenge = await this.consumeEmailCode(email, input.emailCode);
+
     const correlationId = this.tokenService.createCorrelationId();
     const user = User.create({
-      email: input.email,
+      email,
       username: input.username,
       displayName: input.displayName,
       correlationId,
     });
+    user.verifyEmail(correlationId);
     const passwordHash = await this.passwordHasher.hash(input.password);
-    const verificationToken = this.tokenService.generateOpaqueToken();
 
     await this.transactions.withinTransaction(async (transaction) => {
       await this.users.save(user, passwordHash);
-      await this.tokens.createEmailVerification({
-        id: UniqueId.create(),
-        userId: user.id,
-        tokenHash: this.tokenService.hashOpaqueToken(verificationToken),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        usedAt: null,
-      });
+      await this.emailOtps.markConsumed(challenge.id);
       await this.events.publish(transaction, user.pullDomainEvents());
-    });
-
-    await this.mailer.send({
-      to: user.email,
-      subject: 'Vérifiez votre e-mail DreamingCloud',
-      text: `Bonjour ${user.displayName},\n\nConfirmez votre adresse : ${this.config.APP_URL}/auth/verify-email?token=${verificationToken}\n`,
     });
 
     return { userId: user.id.value };
   }
+
+  private async consumeEmailCode(email: string, emailCode: string): Promise<{ id: UniqueId }> {
+    const challenge = await this.emailOtps.findLatestActive(email);
+    if (!challenge || challenge.expiresAt.getTime() < Date.now()) {
+      throw new BadRequestException('Code de vérification invalide ou expiré.');
+    }
+
+    const expectedHash = this.tokenService.hashEmailOtp(email, emailCode);
+    if (!otpHashesMatch(challenge.codeHash, expectedHash)) {
+      const attempts = await this.emailOtps.incrementAttempts(challenge.id);
+      if (attempts >= EMAIL_OTP_MAX_ATTEMPTS) {
+        await this.emailOtps.markConsumed(challenge.id);
+      }
+      throw new BadRequestException('Code de vérification invalide ou expiré.');
+    }
+
+    return { id: challenge.id };
+  }
+}
+
+function otpHashesMatch(left: string, right: string): boolean {
+  const a = Buffer.from(left);
+  const b = Buffer.from(right);
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  return timingSafeEqual(a, b);
 }

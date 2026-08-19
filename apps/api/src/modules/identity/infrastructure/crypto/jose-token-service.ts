@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, createHmac, randomBytes, randomInt } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { UniqueId } from '@dreamingcloud/shared-kernel';
 import { SignJWT, importPKCS8, importSPKI, jwtVerify, type JWTPayload } from 'jose';
@@ -49,6 +49,16 @@ export class JoseTokenService implements TokenService {
 
   public generateOpaqueToken(): string {
     return randomBytes(32).toString('base64url');
+  }
+
+  public generateEmailOtp(): string {
+    return randomInt(0, 1_000_000).toString().padStart(6, '0');
+  }
+
+  public hashEmailOtp(email: string, code: string): string {
+    return createHmac('sha256', this.config.CSRF_SECRET)
+      .update(`${email.toLowerCase()}:${code}`)
+      .digest('hex');
   }
 
   public createCorrelationId(): UniqueId {

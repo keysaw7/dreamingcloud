@@ -47,7 +47,7 @@ function VerifyEmailInner() {
   }, [common, token, t]);
 
   return (
-    <AuthLayout brand={common('appName')} title={t('verifyTitle')}>
+    <AuthLayout title={t('verifyTitle')}>
       <div className="space-y-5">
         {status === 'loading' ? (
           <p className="text-muted-foreground text-sm">{common('loading')}</p>
@@ -70,7 +70,7 @@ export default function VerifyEmailPage() {
   return (
     <Suspense
       fallback={
-        <AuthLayout brand={common('appName')} title={t('verifyTitle')}>
+        <AuthLayout title={t('verifyTitle')}>
           <p className="text-muted-foreground text-sm">{common('loading')}</p>
         </AuthLayout>
       }

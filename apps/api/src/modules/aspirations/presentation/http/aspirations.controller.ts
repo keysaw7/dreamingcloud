@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { createCursorPage, decodeCursor } from '../../../../platform/http/cursor-pagination';
 import { Public } from '../../../../platform/security/authorization';
+import { IDENTITY_PUBLIC_API, type IdentityPublicApi } from '../../../identity/identity.public';
 import { CurrentUser } from '../../../identity/presentation/http/current-user.decorator';
 import { OptionalUser } from '../../../identity/presentation/http/optional-user.decorator';
 import { AddMilestoneUseCase } from '../../application/commands/add-milestone.use-case';
@@ -25,6 +26,7 @@ export class AspirationsController {
     private readonly addMilestone: AddMilestoneUseCase,
     private readonly getAspiration: GetAspirationQuery,
     @Inject(ASPIRATION_REPOSITORY) private readonly aspirations: AspirationRepository,
+    @Inject(IDENTITY_PUBLIC_API) private readonly identity: IdentityPublicApi,
   ) {}
 
   @Post()
@@ -65,15 +67,30 @@ export class AspirationsController {
       createdAt: item.publishedAt?.toISOString() ?? item.createdAt.toISOString(),
     }));
 
+    const owners = new Map(
+      await Promise.all(
+        [...new Set(page.data.map((item) => item.ownerId.value))].map(async (ownerId) => {
+          const owner = await this.identity.getUser(ownerId);
+          return [ownerId, owner] as const;
+        }),
+      ),
+    );
+
     return {
-      data: page.data.map((item) => ({
-        id: item.id.value,
-        title: item.title,
-        slug: item.slug,
-        story: item.story,
-        progressPercent: item.progressPercent,
-        publishedAt: item.publishedAt?.toISOString() ?? null,
-      })),
+      data: page.data.map((item) => {
+        const owner = owners.get(item.ownerId.value);
+        return {
+          id: item.id.value,
+          ownerId: item.ownerId.value,
+          ownerUsername: owner?.username ?? null,
+          ownerDisplayName: owner?.displayName ?? null,
+          title: item.title,
+          slug: item.slug,
+          story: item.story,
+          progressPercent: item.progressPercent,
+          publishedAt: item.publishedAt?.toISOString() ?? null,
+        };
+      }),
       meta: page.meta,
     };
   }

@@ -13,5 +13,7 @@ export interface TokenService {
   verifyAccessToken(token: string): Promise<AccessTokenClaims>;
   hashOpaqueToken(token: string): string;
   generateOpaqueToken(): string;
+  generateEmailOtp(): string;
+  hashEmailOtp(email: string, code: string): string;
   createCorrelationId(): UniqueId;
 }

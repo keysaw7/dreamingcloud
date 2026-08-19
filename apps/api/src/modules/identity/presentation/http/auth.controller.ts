@@ -1,3 +1,9 @@
+import {
+  loginUserSchema,
+  registerUserSchema,
+  requestEmailCodeSchema,
+  resetPasswordSchema,
+} from '@dreamingcloud/contracts';
 import { Body, Controller, Delete, Get, Inject, Patch, Post, Req, Res } from '@nestjs/common';
 import { z } from 'zod';
 
@@ -27,6 +33,7 @@ import { LoginUserUseCase } from '../../application/commands/login-user.use-case
 import { LogoutUserUseCase } from '../../application/commands/logout-user.use-case';
 import { RefreshSessionUseCase } from '../../application/commands/refresh-session.use-case';
 import { RegisterUserUseCase } from '../../application/commands/register-user.use-case';
+import { RequestEmailCodeUseCase } from '../../application/commands/request-email-code.use-case';
 import { RequestPasswordResetUseCase } from '../../application/commands/request-password-reset.use-case';
 import { ResetPasswordUseCase } from '../../application/commands/reset-password.use-case';
 import { UpdateProfileUseCase } from '../../application/commands/update-profile.use-case';
@@ -34,26 +41,11 @@ import { VerifyEmailUseCase } from '../../application/commands/verify-email.use-
 import { GetCurrentUserQuery } from '../../application/queries/get-current-user.query';
 import { CurrentUser } from './current-user.decorator';
 
-const registerSchema = z.object({
-  email: z.email(),
-  username: z
-    .string()
-    .min(3)
-    .max(32)
-    .regex(/^[a-zA-Z0-9_]+$/),
-  displayName: z.string().min(1).max(80),
-  password: z.string().min(10).max(128),
-});
-
-const loginSchema = z.object({
-  email: z.email(),
-  password: z.string().min(1),
-});
-
 @Controller()
 export class AuthController {
   public constructor(
     private readonly registerUser: RegisterUserUseCase,
+    private readonly requestEmailCode: RequestEmailCodeUseCase,
     private readonly loginUser: LoginUserUseCase,
     private readonly refreshSession: RefreshSessionUseCase,
     private readonly logoutUser: LogoutUserUseCase,
@@ -70,15 +62,23 @@ export class AuthController {
   @Public()
   @Post('auth/register')
   public async register(@Body() body: unknown) {
-    const input = registerSchema.parse(body);
+    const input = registerUserSchema.parse(body);
     const result = await this.registerUser.execute(input);
     return { data: result };
   }
 
   @Public()
+  @Post('auth/request-email-code')
+  public async requestEmailVerificationCode(@Body() body: unknown) {
+    const input = requestEmailCodeSchema.parse(body);
+    await this.requestEmailCode.execute(input.email);
+    return { data: { ok: true } };
+  }
+
+  @Public()
   @Post('auth/login')
   public async login(@Body() body: unknown, @Res({ passthrough: true }) reply: CookieReply) {
-    const input = loginSchema.parse(body);
+    const input = loginUserSchema.parse(body);
     const tokens = await this.loginUser.execute(input);
     this.setAuthCookies(reply, tokens.accessToken, tokens.refreshToken);
     this.setCsrfCookie(reply);
@@ -138,12 +138,7 @@ export class AuthController {
   @Public()
   @Post('auth/reset-password')
   public async reset(@Body() body: unknown) {
-    const input = z
-      .object({
-        token: z.string().min(1),
-        password: z.string().min(10).max(128),
-      })
-      .parse(body);
+    const input = resetPasswordSchema.parse(body);
     await this.resetPassword.execute(input);
     return { data: { ok: true } };
   }

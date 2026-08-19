@@ -22,7 +22,7 @@ export function CreationStep({
   const common = useTranslations('common');
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-6">
       <div>
         <h2 className="font-semibold text-lg">{t('stepStoryTitle')}</h2>
         <p className="mt-1 text-muted-foreground text-sm">{t('stepStoryDescription')}</p>
@@ -48,7 +48,7 @@ export function CreationStep({
           disabled={busy}
         />
       </Field>
-      <div className="flex justify-end">
+      <div className="flex justify-end pt-2">
         <Button
           type="button"
           disabled={busy || title.trim().length < 3 || story.trim().length < 20}

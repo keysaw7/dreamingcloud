@@ -55,7 +55,7 @@ export function AppShell({
     return (
       <div className="min-h-dvh">
         <header className="border-border border-b bg-background/90 backdrop-blur">
-          <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between px-5">
+          <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
             <Link href="/" className="font-semibold tracking-tight">
               {common('appName')}
             </Link>
@@ -64,7 +64,9 @@ export function AppShell({
             </Button>
           </div>
         </header>
-        <main id="main-content">{children}</main>
+        <main className="mx-auto w-full min-w-0 px-4 py-6 sm:px-6 lg:px-8" id="main-content">
+          {children}
+        </main>
       </div>
     );
   }
@@ -77,7 +79,7 @@ export function AppShell({
         user={user}
         onLogout={() => void onLogout()}
       />
-      <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between border-border border-b bg-background/90 px-5 backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between border-border border-b bg-background/90 px-4 backdrop-blur sm:px-6 lg:hidden">
         <Link href="/" className="font-semibold tracking-tight">
           {common('appName')}
         </Link>
@@ -95,7 +97,7 @@ export function AppShell({
       </header>
       <main
         id="main-content"
-        className="mx-auto w-full max-w-7xl px-4 py-6 pb-28 lg:ml-72 lg:max-w-none lg:px-10 lg:py-10 lg:pb-10"
+        className="mx-auto w-full min-w-0 px-4 py-6 pb-28 sm:px-6 lg:ml-72 lg:px-8 lg:pb-8"
       >
         {children}
       </main>

@@ -101,58 +101,10 @@ export function Progress({
       ) : null}
       <progress
         aria-label={label}
-        className="h-1.5 w-full accent-primary"
+        className="h-2 w-full appearance-none overflow-hidden rounded-full border-0 bg-muted [&::-moz-progress-bar]:bg-primary [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-muted [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-primary"
         max={100}
         value={percentage}
       />
-    </div>
-  );
-}
-
-export function PageShell({
-  actions,
-  children,
-  className,
-  description,
-  maxWidth = 'xl',
-  padded = true,
-  title,
-}: Readonly<{
-  children: ReactNode;
-  className?: string;
-  title?: ReactNode;
-  description?: ReactNode;
-  actions?: ReactNode;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | 'feed' | 'full';
-  padded?: boolean;
-}>) {
-  const widths = {
-    sm: 'max-w-md',
-    md: 'max-w-2xl',
-    lg: 'max-w-3xl',
-    xl: 'max-w-6xl',
-    feed: 'max-w-2xl',
-    full: 'max-w-none',
-  };
-  return (
-    <div
-      className={cn(
-        'mx-auto w-full',
-        widths[maxWidth],
-        padded && 'px-4 py-6 sm:px-6 sm:py-8',
-        className,
-      )}
-    >
-      {title || description || actions ? (
-        <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            {title ? <h1 className="font-semibold text-3xl tracking-tight">{title}</h1> : null}
-            {description ? <p className="mt-2 text-muted-foreground">{description}</p> : null}
-          </div>
-          {actions ? <div className="flex flex-wrap gap-3">{actions}</div> : null}
-        </header>
-      ) : null}
-      {children}
     </div>
   );
 }

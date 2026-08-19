@@ -13,10 +13,18 @@ export async function register(input: {
   username: string;
   displayName: string;
   password: string;
+  emailCode: string;
 }): Promise<void> {
   await apiFetch('/auth/register', {
     method: 'POST',
     body: JSON.stringify(input),
+  });
+}
+
+export async function requestEmailCode(email: string): Promise<void> {
+  await apiFetch('/auth/request-email-code', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
   });
 }
 

@@ -18,6 +18,9 @@ export interface PublicProfileDto {
   readonly followingCount: number;
   readonly aspirations: readonly {
     id: string;
+    ownerId: string;
+    ownerUsername: string;
+    ownerDisplayName: string;
     title: string;
     slug: string;
     story: string;
@@ -99,6 +102,9 @@ export class GetPublicProfileQuery {
       followingCount: Number(following?.value ?? 0),
       aspirations: published.map((item) => ({
         id: item.id,
+        ownerId: user.id.value,
+        ownerUsername: user.username,
+        ownerDisplayName: user.displayName,
         title: item.title,
         slug: item.slug,
         story: item.story,

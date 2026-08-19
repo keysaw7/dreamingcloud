@@ -1,6 +1,6 @@
 'use client';
 
-import { registerUserSchema } from '@dreamingcloud/contracts';
+import { EMAIL_OTP_LENGTH, passwordRuleChecks, registerUserSchema } from '@dreamingcloud/contracts';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -10,6 +10,8 @@ import { AuthLayout } from '../../../components/auth-layout';
 import { Alert } from '../../../components/ui/alert';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
+import { EmailVerificationField } from '../../../features/auth/email-verification-field';
+import { PasswordField } from '../../../features/auth/password-field';
 import { register } from '../../../lib/api/auth';
 
 export default function RegisterPage() {
@@ -18,6 +20,7 @@ export default function RegisterPage() {
   const common = useTranslations('common');
   const [form, setForm] = useState({
     email: '',
+    emailCode: '',
     username: '',
     displayName: '',
     password: '',
@@ -25,13 +28,20 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  const passwordReady = Object.values(passwordRuleChecks).every((check) => check(form.password));
+  const codeReady = form.emailCode.length === EMAIL_OTP_LENGTH;
+
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
 
     const parsed = registerUserSchema.safeParse(form);
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? common('errorGeneric'));
+      setError(
+        passwordReady
+          ? (parsed.error.issues[0]?.message ?? common('errorGeneric'))
+          : t('passwordInvalid'),
+      );
       return;
     }
 
@@ -48,7 +58,6 @@ export default function RegisterPage() {
 
   return (
     <AuthLayout
-      brand={common('appName')}
       description={t('verifyHint')}
       footer={
         <>
@@ -60,7 +69,7 @@ export default function RegisterPage() {
       }
       title={t('registerTitle')}
     >
-      <form className="space-y-5" onSubmit={onSubmit}>
+      <form className="space-y-4" onSubmit={onSubmit}>
         <label className="grid gap-2 font-medium text-sm" htmlFor="register-display-name">
           {t('displayName')}
           <Input
@@ -87,35 +96,24 @@ export default function RegisterPage() {
             }
           />
         </label>
-        <label className="grid gap-2 font-medium text-sm" htmlFor="register-email">
-          {t('email')}
-          <Input
-            autoComplete="email"
-            disabled={busy}
-            id="register-email"
-            required
-            type="email"
-            value={form.email}
-            onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-          />
-        </label>
-        <label className="grid gap-2 font-medium text-sm" htmlFor="register-password">
-          {t('password')}
-          <Input
-            autoComplete="new-password"
-            disabled={busy}
-            id="register-password"
-            minLength={10}
-            required
-            type="password"
-            value={form.password}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, password: event.target.value }))
-            }
-          />
-        </label>
+        <EmailVerificationField
+          disabled={busy}
+          email={form.email}
+          emailCode={form.emailCode}
+          onEmailChange={(email) => setForm((current) => ({ ...current, email }))}
+          onEmailCodeChange={(emailCode) => setForm((current) => ({ ...current, emailCode }))}
+        />
+        <PasswordField
+          autoComplete="new-password"
+          disabled={busy}
+          id="register-password"
+          label={t('password')}
+          showRules
+          value={form.password}
+          onChange={(password) => setForm((current) => ({ ...current, password }))}
+        />
         {error ? <Alert variant="destructive">{error}</Alert> : null}
-        <Button className="w-full" disabled={busy} type="submit">
+        <Button className="w-full" disabled={busy || !passwordReady || !codeReady} type="submit">
           {t('registerSubmit')}
         </Button>
       </form>

@@ -1,6 +1,7 @@
 import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { UniqueId } from '@dreamingcloud/shared-kernel';
 
+import { IDENTITY_PUBLIC_API, type IdentityPublicApi } from '../../../identity/identity.public';
 import type { Aspiration } from '../../domain/entities/aspiration.entity';
 import {
   ASPIRATION_REPOSITORY,
@@ -10,6 +11,8 @@ import {
 export interface AspirationDto {
   readonly id: string;
   readonly ownerId: string;
+  readonly ownerUsername: string | null;
+  readonly ownerDisplayName: string | null;
   readonly title: string;
   readonly slug: string;
   readonly story: string;
@@ -37,6 +40,7 @@ export interface AspirationDto {
 export class GetAspirationQuery {
   public constructor(
     @Inject(ASPIRATION_REPOSITORY) private readonly aspirations: AspirationRepository,
+    @Inject(IDENTITY_PUBLIC_API) private readonly identity: IdentityPublicApi,
   ) {}
 
   public async byId(id: string, viewerId: string | null = null): Promise<AspirationDto> {
@@ -83,10 +87,14 @@ export class GetAspirationQuery {
     }
   }
 
-  private toDto(aspiration: Aspiration): AspirationDto {
+  private async toDto(aspiration: Aspiration): Promise<AspirationDto> {
+    const owner = await this.identity.getUser(aspiration.ownerId.value);
+
     return {
       id: aspiration.id.value,
       ownerId: aspiration.ownerId.value,
+      ownerUsername: owner?.username ?? null,
+      ownerDisplayName: owner?.displayName ?? null,
       title: aspiration.title,
       slug: aspiration.slug,
       story: aspiration.story,

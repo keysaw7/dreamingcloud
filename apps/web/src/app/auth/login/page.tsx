@@ -9,6 +9,7 @@ import { AuthLayout } from '../../../components/auth-layout';
 import { Alert } from '../../../components/ui/alert';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
+import { PasswordField } from '../../../features/auth/password-field';
 import { login } from '../../../lib/api/auth';
 
 function LoginForm() {
@@ -16,7 +17,6 @@ function LoginForm() {
   const params = useSearchParams();
   const t = useTranslations('auth');
   const nav = useTranslations('nav');
-  const common = useTranslations('common');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +40,6 @@ function LoginForm() {
 
   return (
     <AuthLayout
-      brand={common('appName')}
       title={t('loginTitle')}
       footer={
         <>
@@ -65,18 +64,14 @@ function LoginForm() {
             onChange={(event) => setEmail(event.target.value)}
           />
         </label>
-        <label className="grid gap-2 font-medium text-sm" htmlFor="login-password">
-          {t('password')}
-          <Input
-            autoComplete="current-password"
-            disabled={busy}
-            id="login-password"
-            required
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-        </label>
+        <PasswordField
+          autoComplete="current-password"
+          disabled={busy}
+          id="login-password"
+          label={t('password')}
+          value={password}
+          onChange={setPassword}
+        />
         {error ? <Alert variant="destructive">{error}</Alert> : null}
         <Button className="w-full" disabled={busy} type="submit">
           {t('loginSubmit')}

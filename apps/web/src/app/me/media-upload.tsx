@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Alert, Button } from '@dreamingcloud/ui';
 
@@ -8,6 +9,7 @@ import { apiFetch } from '../../lib/api';
 const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 export function MediaUpload() {
+  const t = useTranslations('profile');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -24,7 +26,7 @@ export function MediaUpload() {
     setBusy(true);
     try {
       if (!ALLOWED.has(file.type)) {
-        throw new Error('Formats acceptés : JPEG, PNG, WebP.');
+        throw new Error(t('invalidMediaType'));
       }
 
       const requested = await apiFetch<{
@@ -43,7 +45,7 @@ export function MediaUpload() {
         body: file,
       });
       if (!upload.ok) {
-        throw new Error('Échec upload stockage');
+        throw new Error(t('storageUploadFailed'));
       }
 
       await apiFetch(`/media/${requested.data.mediaId}/confirm`, {
@@ -55,19 +57,19 @@ export function MediaUpload() {
         `/media/${requested.data.mediaId}`,
       );
       setPreviewUrl(media.data.publicUrl);
-      setMessage(`Média ${requested.data.mediaId} confirmé.`);
+      setMessage(t('mediaConfirmed'));
     } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : 'Upload impossible');
+      setError(uploadError instanceof Error ? uploadError.message : t('uploadFailed'));
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <div className="mt-6 space-y-3 border-[var(--dc-color-border)] border-t pt-6">
-      <h2 className="font-medium text-lg">Médias</h2>
+    <div className="mt-6 space-y-3 border-border border-t pt-6">
+      <h2 className="font-medium text-lg">{t('mediaTitle')}</h2>
       <label className="block text-sm" htmlFor="media-upload">
-        Ajouter une image
+        {t('addImage')}
         <input
           id="media-upload"
           className="mt-2 block w-full text-sm"
@@ -80,8 +82,8 @@ export function MediaUpload() {
       {previewUrl ? (
         <img
           src={previewUrl}
-          alt="Aperçu du média uploadé"
-          className="mt-2 h-32 w-32 rounded-[var(--dc-radius-md)] object-cover"
+          alt={t('mediaPreviewAlt')}
+          className="mt-2 size-32 rounded-md object-cover"
         />
       ) : null}
       {error ? <Alert variant="danger">{error}</Alert> : null}
@@ -95,7 +97,7 @@ export function MediaUpload() {
             setError(null);
           }}
         >
-          Effacer le statut
+          {t('clearStatus')}
         </Button>
       ) : null}
     </div>

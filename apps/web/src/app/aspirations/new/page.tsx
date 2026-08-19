@@ -1,8 +1,7 @@
 'use client';
 
 import { createAspirationSchema } from '@dreamingcloud/contracts';
-import { Badge, Button, Card, PageShell } from '@dreamingcloud/ui';
-import Link from 'next/link';
+import { Badge, Card, PageShell } from '@dreamingcloud/ui';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -118,13 +117,22 @@ export default function NewAspirationPage() {
           { id: 2 as const, label: t('stepNeedsTitle') },
           { id: 3 as const, label: t('stepReviewTitle') },
         ].map((item) => (
-          <Badge key={item.id} variant={step === item.id ? 'primary' : 'default'}>
-            {common('step')} {item.id} · {item.label}
-          </Badge>
+          <button
+            key={item.id}
+            type="button"
+            aria-current={step === item.id ? 'step' : undefined}
+            disabled={item.id > step}
+            className="rounded-full disabled:cursor-not-allowed"
+            onClick={() => setStep(item.id)}
+          >
+            <Badge variant={step === item.id ? 'primary' : 'default'}>
+              {common('step')} {item.id} · {item.label}
+            </Badge>
+          </button>
         ))}
       </div>
 
-      <Card className="p-6">
+      <Card className="p-6 sm:p-8">
         {step === 1 ? (
           <CreationStep
             busy={busy}
@@ -162,12 +170,6 @@ export default function NewAspirationPage() {
           />
         ) : null}
       </Card>
-
-      <div className="mt-4">
-        <Button asChild variant="ghost" size="sm">
-          <Link href="/">{common('backHome')}</Link>
-        </Button>
-      </div>
     </PageShell>
   );
 }

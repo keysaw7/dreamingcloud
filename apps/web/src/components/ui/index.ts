@@ -6,6 +6,7 @@ export * from './card';
 export * from './empty-state';
 export * from './input';
 export * from './legacy-primitives';
+export * from './page-shell';
 export * from './skeleton';
 export * from './textarea';
 export { cn } from '../../lib/utils';

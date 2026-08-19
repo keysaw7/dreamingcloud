@@ -58,3 +58,12 @@ Ces règles sont obligatoires pour le front `apps/web`. Elles sont complétées 
 - Les cibles tactiles mesurent au minimum 44 px.
 - Le développement est mobile-first. Les breakpoints autorisés sont `sm`, `md`, `lg` et `xl`.
 - Toute modification visuelle se contrôle à 360, 768, 1024 et 1440 px, en thèmes clair et sombre.
+- `AppShell` est le seul chrome : gutter, offset sidebar (`w-72` / `lg:ml-72`) et tab bar
+  mobile. Les pages n'ajoutent pas de padding de page.
+- Toute route s'enveloppe dans `PageShell` (`maxWidth` : `sm` → `max-w-md`, `md` → `max-w-2xl`,
+  `lg` → `max-w-3xl`, `xl` → `max-w-6xl`, `full` exception) ou `AuthLayout` / `FeedLayout`.
+- Deux colonnes : `FeedLayout` (aside empilé sous `xl`, grille à `xl`) ou `xl:grid-cols-*` local.
+  Pas de troisième wrapper de page.
+- Grille interne : `grid gap-4 md:grid-cols-2`. Actions : `flex flex-wrap gap-3`, cibles `min-h-11`.
+- Enfant de flex : `min-w-0` et `truncate` ou `break-words`.
+- Interdit : `max-w-*` ad hoc pour le layout, masquer un aside sans alternative.

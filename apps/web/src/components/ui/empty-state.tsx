@@ -15,12 +15,12 @@ export interface EmptyStateProps {
 export function EmptyState({ title, description, action, icon, className }: EmptyStateProps) {
   return (
     <Card
-      className={cn('border border-border bg-muted/40 px-6 py-10 text-center', className)}
+      className={cn('border border-border bg-muted/40 px-6 py-8 text-center', className)}
       role="status"
     >
       <div
         aria-hidden="true"
-        className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent text-accent-foreground"
+        className="mx-auto mb-4 flex size-10 items-center justify-center rounded-full bg-accent text-accent-foreground"
       >
         {icon ?? <InboxIcon size={22} />}
       </div>

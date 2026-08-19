@@ -60,7 +60,7 @@ export function ReviewStep({
 
       {error ? <Alert variant="danger">{error}</Alert> : null}
 
-      <div className="flex flex-wrap justify-between gap-3">
+      <div className="flex flex-wrap justify-between gap-3 pt-2">
         <Button type="button" variant="ghost" disabled={busy} onClick={onBack}>
           {common('previous')}
         </Button>

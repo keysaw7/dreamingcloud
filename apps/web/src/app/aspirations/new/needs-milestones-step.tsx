@@ -60,7 +60,7 @@ export function NeedsMilestonesStep({
         {needs.map((need, index) => (
           <div
             key={`need-${index}`}
-            className="grid gap-2 rounded-md border border-border p-3 md:grid-cols-[1fr_140px]"
+            className="grid gap-2 rounded-md border border-border p-3 md:grid-cols-[minmax(0,1fr)_auto]"
           >
             <Input
               placeholder={t('needTitle')}
@@ -137,7 +137,7 @@ export function NeedsMilestonesStep({
         )}
       </div>
 
-      <div className="flex flex-wrap justify-between gap-3">
+      <div className="flex flex-wrap justify-between gap-3 pt-2">
         <Button type="button" variant="ghost" disabled={busy} onClick={onBack}>
           {common('previous')}
         </Button>

@@ -126,6 +126,20 @@ export const passwordResetTokens = pgTable(
   (table) => [uniqueIndex('password_reset_tokens_hash_unique').on(table.tokenHash)],
 );
 
+export const emailOtpChallenges = pgTable(
+  'email_otp_challenges',
+  {
+    id: uuid('id').primaryKey(),
+    email: text('email').notNull(),
+    codeHash: text('code_hash').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    consumedAt: timestamp('consumed_at', { withTimezone: true }),
+    attemptCount: integer('attempt_count').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index('email_otp_challenges_email_idx').on(table.email)],
+);
+
 export const categories = pgTable('categories', {
   id: uuid('id').primaryKey(),
   parentId: uuid('parent_id'),
@@ -517,6 +531,7 @@ export const schema = {
   userReputation,
   emailVerificationTokens,
   passwordResetTokens,
+  emailOtpChallenges,
   categories,
   tags,
   skills,

@@ -7,7 +7,7 @@ export default async function Loading() {
   const t = await getTranslations('common');
 
   return (
-    <PageShell maxWidth="feed">
+    <PageShell maxWidth="md">
       <div aria-busy="true" aria-live="polite" role="status">
         <span className="sr-only">{t('loading')}</span>
         <Skeleton className="h-28 w-full rounded-xl" />

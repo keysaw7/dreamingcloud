@@ -7,6 +7,7 @@ import { useState } from 'react';
 
 import { Alert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
+import { EmptyState } from '../../components/ui/empty-state';
 import { fetchDiscoverPage, fetchFollowingPage } from '../../lib/api/feed';
 import type { AspirationListItem } from '../../lib/types';
 import { AspirationCard } from './aspiration-card';
@@ -71,19 +72,17 @@ export function AspirationFeed({
 
   if (items.length === 0) {
     return (
-      <section className="rounded-lg border border-border border-dashed px-6 py-12 text-center">
-        <h2 className="font-semibold text-xl tracking-tight">{emptyTitle}</h2>
-        {emptyDescription ? (
-          <p className="mx-auto mt-2 max-w-md text-muted-foreground text-sm leading-relaxed">
-            {emptyDescription}
-          </p>
-        ) : null}
-        {emptyActionHref && emptyActionLabel ? (
-          <Button asChild className="mt-6">
-            <Link href={emptyActionHref}>{emptyActionLabel}</Link>
-          </Button>
-        ) : null}
-      </section>
+      <EmptyState
+        title={emptyTitle}
+        description={emptyDescription}
+        action={
+          emptyActionHref && emptyActionLabel ? (
+            <Button asChild>
+              <Link href={emptyActionHref}>{emptyActionLabel}</Link>
+            </Button>
+          ) : undefined
+        }
+      />
     );
   }
 

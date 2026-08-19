@@ -1,5 +1,6 @@
 'use client';
 
+import { passwordRuleChecks } from '@dreamingcloud/contracts';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -8,7 +9,7 @@ import { Suspense, useState } from 'react';
 import { AuthLayout } from '../../../components/auth-layout';
 import { Alert } from '../../../components/ui/alert';
 import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
+import { PasswordField } from '../../../features/auth/password-field';
 import { resetPassword } from '../../../lib/api/auth';
 
 function ResetPasswordInner() {
@@ -20,11 +21,16 @@ function ResetPasswordInner() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const passwordReady = Object.values(passwordRuleChecks).every((check) => check(password));
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
     setMessage(null);
+    if (!passwordReady) {
+      setError(t('passwordInvalid'));
+      return;
+    }
     setBusy(true);
     try {
       await resetPassword(token, password);
@@ -38,7 +44,6 @@ function ResetPasswordInner() {
 
   return (
     <AuthLayout
-      brand={common('appName')}
       footer={
         <Link className="font-semibold text-primary hover:underline" href="/auth/login">
           {t('loginTitle')}
@@ -47,22 +52,18 @@ function ResetPasswordInner() {
       title={t('resetTitle')}
     >
       <form className="space-y-5" onSubmit={onSubmit}>
-        <label className="grid gap-2 font-medium text-sm" htmlFor="reset-password">
-          {t('password')}
-          <Input
-            autoComplete="new-password"
-            disabled={busy}
-            id="reset-password"
-            minLength={10}
-            required
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-        </label>
+        <PasswordField
+          autoComplete="new-password"
+          disabled={busy}
+          id="reset-password"
+          label={t('password')}
+          showRules
+          value={password}
+          onChange={setPassword}
+        />
         {error ? <Alert variant="destructive">{error}</Alert> : null}
         {message ? <Alert variant="success">{message}</Alert> : null}
-        <Button className="w-full" disabled={!token || busy} type="submit">
+        <Button className="w-full" disabled={!token || busy || !passwordReady} type="submit">
           {t('resetSubmit')}
         </Button>
       </form>
@@ -76,7 +77,7 @@ export default function ResetPasswordPage() {
   return (
     <Suspense
       fallback={
-        <AuthLayout brand={common('appName')} title={t('resetTitle')}>
+        <AuthLayout title={t('resetTitle')}>
           <p className="text-muted-foreground text-sm">{common('loading')}</p>
         </AuthLayout>
       }

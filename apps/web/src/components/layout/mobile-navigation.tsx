@@ -30,8 +30,10 @@ export function MobileNavigation({
             key={href}
             href={href}
             className={cn(
-              'flex min-h-11 min-w-11 flex-1 flex-col items-center justify-center gap-1 rounded-md px-1 font-medium text-[0.6875rem]',
-              isActive(pathname, href) ? 'text-primary' : 'text-muted-foreground',
+              'flex min-h-11 min-w-11 flex-1 flex-col items-center justify-center gap-1 rounded-md px-1 py-1 font-medium text-xs',
+              isActive(pathname, href)
+                ? 'bg-accent text-accent-foreground'
+                : 'text-muted-foreground',
             )}
           >
             <Icon aria-hidden="true" size={19} strokeWidth={isActive(pathname, href) ? 2.5 : 2} />
@@ -41,8 +43,10 @@ export function MobileNavigation({
         <Link
           href={user ? '/me' : '/auth/login'}
           className={cn(
-            'flex min-h-11 min-w-11 flex-1 flex-col items-center justify-center gap-1 rounded-md px-1 font-medium text-[0.6875rem]',
-            isActive(pathname, '/me') ? 'text-primary' : 'text-muted-foreground',
+            'flex min-h-11 min-w-11 flex-1 flex-col items-center justify-center gap-1 rounded-md px-1 py-1 font-medium text-xs',
+            isActive(pathname, '/me')
+              ? 'bg-accent text-accent-foreground'
+              : 'text-muted-foreground',
           )}
         >
           <UserRound aria-hidden="true" size={19} />
