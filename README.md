@@ -79,10 +79,44 @@ Inscription sécurisée, aspirations publiables, social + feed, contributions no
 
 ## Déploiement (production)
 
-Dockerfiles fournis :
+Le front Next.js va sur **Vercel**. L’API NestJS, Redis et le worker **ne peuvent pas** tourner en serverless Vercel (processus long-running, outbox, BullMQ, `sharp`). Stack starter gratuite :
 
-- `apps/api/Dockerfile`
-- `apps/worker/Dockerfile`
-- `apps/web/Dockerfile`
+| Rôle | Service |
+| --- | --- |
+| Front | Vercel Hobby (`apps/web`) |
+| API + worker | Render free web service (`render.yaml`, un seul process via `RUN_WORKER_IN_API=true`) |
+| Postgres | Neon (URL **directe** `*.neon.tech:5432` + `?sslmode=require`, pas le pooler `-pooler`) |
+| Redis | Upstash (`rediss://…`) |
+| Médias | Cloudflare R2 (CORS du bucket : `PUT`, `GET`, `HEAD` depuis l’origine Vercel) |
+| E-mails | Resend (optionnel ; sinon les tokens restent dans les logs) |
 
-Variables obligatoires en production (refus au boot sinon) : `JWT_PRIVATE_KEY_PEM`, `JWT_PUBLIC_KEY_PEM`, `COOKIE_SECRET`, `CSRF_SECRET`, `COOKIE_SECURE=true`, secrets S3 non-defaults. Le worker doit tourner à côté de l’API pour consommer l’outbox (ranking, notifications, feed, médias).
+Le navigateur ne parle qu’à Vercel : Next.js reverse-proxy `/api/v1/*` vers l’API (`API_ORIGIN`) pour que les cookies d’auth restent sur l’origine front, sans nom de domaine custom.
+
+Ordre : Neon → Upstash → R2 → Render (vérifier `/api/v1/health`) → Vercel.
+
+### Render (API)
+
+1. Créer un Blueprint depuis `render.yaml` (contexte Docker = racine du monorepo).
+2. Renseigner les secrets `sync: false` (voir ci-dessous). `RUN_WORKER_IN_API=true` embarque le consommateur BullMQ dans l’API.
+3. Les migrations SQL (`apps/api/drizzle/*.sql`) s’appliquent au démarrage du container.
+4. Le plan free s’endort après inactivité : premier hit lent, jobs (feed, notifications, images) en pause pendant le sommeil.
+
+Un worker Docker séparé (`apps/worker/Dockerfile`) reste possible plus tard, sans `RUN_WORKER_IN_API`.
+
+### Vercel (front)
+
+1. Importer le repo, **Root Directory** = `apps/web` (voir `apps/web/vercel.json`). Node 22 (`.nvmrc`).
+2. Variables (disponibles au **build**, `API_ORIGIN` est lu par `next.config.ts`) :
+
+| Variable | Valeur |
+| --- | --- |
+| `NEXT_PUBLIC_API_URL` | `/api/v1` |
+| `API_ORIGIN` | `https://<service>.onrender.com` (sans `/api/v1`) |
+| `API_INTERNAL_URL` | `https://<service>.onrender.com/api/v1` |
+| `NEXT_PUBLIC_APP_URL` | `https://<projet>.vercel.app` |
+
+### Secrets API (refus au boot si manquants ou trop faibles)
+
+`JWT_PRIVATE_KEY_PEM`, `JWT_PUBLIC_KEY_PEM` (paire RS256, newlines en `\n`), `COOKIE_SECRET`, `CSRF_SECRET`, `COOKIE_SECURE=true`, clés S3 non-defaults, `CORS_ORIGIN` et `APP_URL` = URL Vercel.
+
+Dockerfiles toujours fournis : `apps/api/Dockerfile`, `apps/worker/Dockerfile`, `apps/web/Dockerfile`.

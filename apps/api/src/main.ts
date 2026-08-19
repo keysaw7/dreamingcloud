@@ -17,9 +17,10 @@ async function bootstrap(): Promise<void> {
   const config = loadAppConfig();
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({ logger: false }),
+    new FastifyAdapter({ logger: false, trustProxy: true }),
     { bufferLogs: true },
   );
+  app.enableShutdownHooks();
 
   const logger = app.get(PinoLoggerService);
   app.useLogger(logger);
@@ -42,6 +43,9 @@ async function bootstrap(): Promise<void> {
   });
 
   await app.listen({ host: '0.0.0.0', port: config.PORT });
+  if (config.RUN_WORKER_IN_API) {
+    logger.log('In-process BullMQ worker enabled (RUN_WORKER_IN_API=true).');
+  }
 }
 
 void bootstrap();

@@ -11,11 +11,15 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { RankingModule } from './modules/ranking/ranking.module';
 import { SocialModule } from './modules/social/social.module';
 import { AppConfigModule } from './platform/config/config.module';
+import { loadEnvFiles } from './platform/config/load-env';
 import { DatabaseModule } from './platform/database/database.module';
 import { EventsModule } from './platform/events/events.module';
 import { HealthController } from './platform/http/health.controller';
+import { WorkerConsumerModule } from './platform/jobs/worker-consumer.module';
 import { ObservabilityModule } from './platform/observability/observability.module';
 import { SecurityModule } from './platform/security/security.module';
+
+loadEnvFiles();
 
 @Module({
   imports: [
@@ -34,6 +38,7 @@ import { SecurityModule } from './platform/security/security.module';
     ContributionsModule,
     NotificationsModule,
     ModerationModule,
+    ...(process.env.RUN_WORKER_IN_API === 'true' ? [WorkerConsumerModule] : []),
   ],
   controllers: [HealthController],
 })

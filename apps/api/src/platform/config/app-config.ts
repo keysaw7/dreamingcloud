@@ -33,6 +33,10 @@ const environmentSchema = z
       .default('true')
       .transform((value) => value === 'true'),
     APP_URL: z.string().default('http://localhost:3000'),
+    RUN_WORKER_IN_API: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((value) => value === 'true'),
   })
   .superRefine((config, context) => {
     if (config.NODE_ENV !== 'production') {

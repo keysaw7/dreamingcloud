@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: dreamingcloud-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: RUN_WORKER_IN_API
+        value: 'true'
+      - key: COOKIE_SECURE
+        value: 'true'
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: JWT_PRIVATE_KEY_PEM
+        sync: false
+      - key: JWT_PUBLIC_KEY_PEM
+        sync: false
+      - key: COOKIE_SECRET
+        sync: false
+      - key: CSRF_SECRET
+        sync: false
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_REGION
+        sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: S3_FORCE_PATH_STYLE
+        value: 'true'
+      - key: EMAIL_FROM
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false

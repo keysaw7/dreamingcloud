@@ -1,4 +1,24 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+const LOCAL_API_URL = 'http://localhost:3001/api/v1';
+
+function stripTrailingSlash(url: string): string {
+  return url.replace(/\/$/u, '');
+}
+
+export function resolveApiBaseUrl(): string {
+  if (typeof window === 'undefined') {
+    const serverUrl =
+      process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? LOCAL_API_URL;
+    if (serverUrl.startsWith('/')) {
+      throw new Error(
+        'API_INTERNAL_URL must be an absolute URL on the server (SSR cannot fetch a relative /api/v1 path).',
+      );
+    }
+
+    return stripTrailingSlash(serverUrl);
+  }
+
+  return stripTrailingSlash(process.env.NEXT_PUBLIC_API_URL ?? LOCAL_API_URL);
+}
 
 function readBrowserCsrfToken(): string | null {
   if (typeof document === 'undefined') {
@@ -42,7 +62,7 @@ export async function apiFetch<T>(
     }
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(`${resolveApiBaseUrl()}${path}`, {
     ...init,
     credentials: 'include',
     headers,
