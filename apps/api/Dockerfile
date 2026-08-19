@@ -1,16 +1,15 @@
 FROM node:22-bookworm-slim AS deps
 WORKDIR /app
 RUN corepack enable
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json ./
 COPY apps/api/package.json apps/api/
 COPY packages ./packages
-RUN pnpm install --frozen-lockfile --filter @dreamingcloud/api...
+RUN pnpm install --frozen-lockfile --filter @dreamingcloud/api... --filter dreamingcloud
 
 FROM deps AS build
 COPY apps/api apps/api
 COPY packages packages
-COPY tsconfig*.json ./
-RUN pnpm --filter @dreamingcloud/api build
+RUN pnpm exec turbo run build --filter=@dreamingcloud/api
 
 FROM node:22-bookworm-slim AS runtime
 WORKDIR /app
