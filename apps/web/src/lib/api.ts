@@ -62,21 +62,41 @@ export async function apiFetch<T>(
     }
   }
 
+  // Do not pass `cache: 'no-store'`: Safari throws
+  // "The string did not match the expected pattern" on that Request cache mode.
+  headers.set('Cache-Control', 'no-store');
+
+  const { cache: _cache, headers: _headers, ...rest } = init;
   const response = await fetch(`${resolveApiBaseUrl()}${path}`, {
-    ...init,
+    ...rest,
     credentials: 'include',
     headers,
-    cache: 'no-store',
   });
 
+  const payload = await response.text();
+  const parsed = parseJsonPayload(payload);
+
   if (!response.ok) {
-    const problem = (await response.json().catch(() => null)) as { detail?: string } | null;
+    const problem = parsed as { detail?: string } | null;
     throw new Error(problem?.detail ?? `Erreur API ${response.status}`);
   }
 
-  if (response.status === 204) {
+  if (response.status === 204 || parsed === undefined) {
     return undefined as T;
   }
 
-  return response.json() as Promise<T>;
+  return parsed as T;
+}
+
+function parseJsonPayload(payload: string): unknown {
+  const trimmed = payload.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  try {
+    return JSON.parse(trimmed) as unknown;
+  } catch {
+    return undefined;
+  }
 }

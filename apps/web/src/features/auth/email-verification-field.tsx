@@ -94,8 +94,9 @@ export function EmailVerificationField({
           className="w-auto min-w-0 flex-1"
           disabled={busy}
           id="register-email"
+          inputMode="email"
           required
-          type="email"
+          type="text"
           value={email}
           onChange={(event) => handleEmailChange(event.target.value)}
         />

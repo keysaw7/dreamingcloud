@@ -58,8 +58,9 @@ function LoginForm() {
             autoComplete="email"
             disabled={busy}
             id="login-email"
+            inputMode="email"
             required
-            type="email"
+            type="text"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
