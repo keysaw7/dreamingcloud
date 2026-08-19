@@ -26,7 +26,7 @@ export function FeedLayout({
     <div
       className={cn(
         pageShellVariants({ maxWidth: 'xl' }),
-        aside && 'grid gap-10 xl:grid-cols-[minmax(0,1fr)_16rem] xl:items-start',
+        aside && 'grid gap-8 xl:grid-cols-[minmax(0,1fr)_16rem] xl:items-start',
       )}
     >
       <div className="min-w-0 max-w-2xl space-y-6">

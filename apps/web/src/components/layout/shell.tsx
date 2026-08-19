@@ -72,7 +72,7 @@ export function AppShell({
   }
 
   return (
-    <div className="min-h-dvh">
+    <div className="min-h-dvh overflow-x-clip">
       <AppSidebar
         navigation={navigation}
         pathname={pathname}
@@ -97,7 +97,7 @@ export function AppShell({
       </header>
       <main
         id="main-content"
-        className="mx-auto w-full min-w-0 px-4 py-6 pb-28 sm:px-6 lg:ml-72 lg:px-8 lg:pb-8"
+        className="mx-auto w-full min-w-0 px-4 py-6 pb-28 sm:px-6 lg:ml-72 lg:w-[calc(100%-18rem)] lg:px-8 lg:pb-8"
       >
         {children}
       </main>
