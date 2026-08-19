@@ -28,6 +28,13 @@ export async function requestEmailCode(email: string): Promise<void> {
   });
 }
 
+export async function verifyEmailCode(email: string, emailCode: string): Promise<void> {
+  await apiFetch('/auth/verify-email-code', {
+    method: 'POST',
+    body: JSON.stringify({ email, emailCode }),
+  });
+}
+
 export async function verifyEmail(token: string): Promise<void> {
   await apiFetch('/auth/verify-email', {
     method: 'POST',

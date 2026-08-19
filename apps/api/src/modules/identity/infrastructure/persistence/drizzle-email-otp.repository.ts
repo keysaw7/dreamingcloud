@@ -50,6 +50,13 @@ export class DrizzleEmailOtpRepository implements EmailOtpRepository {
       .where(eq(emailOtpChallenges.id, id.value));
   }
 
+  public async extendExpiry(id: UniqueId, expiresAt: Date): Promise<void> {
+    await this.database
+      .update(emailOtpChallenges)
+      .set({ expiresAt })
+      .where(eq(emailOtpChallenges.id, id.value));
+  }
+
   public async incrementAttempts(id: UniqueId): Promise<number> {
     const [row] = await this.database
       .update(emailOtpChallenges)

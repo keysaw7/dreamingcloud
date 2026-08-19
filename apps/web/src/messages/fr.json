@@ -88,6 +88,8 @@
     "resendCodeIn": "Renvoyer ({seconds}s)",
     "emailCode": "Code de vérification",
     "emailCodeSent": "Un code à 6 chiffres a été envoyé. Saisissez-le pour continuer.",
+    "emailCodeChecking": "Vérification du code…",
+    "emailCodeVerified": "E-mail vérifié. Vous pouvez créer votre compte.",
     "emailInvalid": "Saisissez une adresse e-mail valide.",
     "showPassword": "Afficher le mot de passe",
     "hidePassword": "Masquer le mot de passe",

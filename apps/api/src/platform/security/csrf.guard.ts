@@ -52,6 +52,7 @@ export class CsrfGuard implements CanActivate {
         url.includes('/auth/login') ||
         url.includes('/auth/register') ||
         url.includes('/auth/request-email-code') ||
+        url.includes('/auth/verify-email-code') ||
         url.includes('/auth/refresh') ||
         url.includes('/auth/verify-email') ||
         url.includes('/auth/request-password-reset') ||

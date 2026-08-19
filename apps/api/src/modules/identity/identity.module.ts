@@ -9,9 +9,11 @@ import { RequestEmailCodeUseCase } from './application/commands/request-email-co
 import { RequestPasswordResetUseCase } from './application/commands/request-password-reset.use-case';
 import { ResetPasswordUseCase } from './application/commands/reset-password.use-case';
 import { UpdateProfileUseCase } from './application/commands/update-profile.use-case';
+import { VerifyEmailCodeUseCase } from './application/commands/verify-email-code.use-case';
 import { VerifyEmailUseCase } from './application/commands/verify-email.use-case';
 import { GetCurrentUserQuery } from './application/queries/get-current-user.query';
 import { GetPublicProfileQuery } from './application/queries/get-public-profile.query';
+import { EmailOtpVerifier } from './application/email-otp-verifier';
 import { EMAIL_OTP_REPOSITORY } from './domain/ports/email-otp.repository';
 import { MAILER } from './domain/ports/mailer';
 import { PASSWORD_HASHER } from './domain/ports/password-hasher';
@@ -39,6 +41,8 @@ import type { Mailer } from './domain/ports/mailer';
   providers: [
     RegisterUserUseCase,
     RequestEmailCodeUseCase,
+    VerifyEmailCodeUseCase,
+    EmailOtpVerifier,
     LoginUserUseCase,
     LogoutUserUseCase,
     RefreshSessionUseCase,

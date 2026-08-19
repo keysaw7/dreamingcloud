@@ -1,6 +1,6 @@
 'use client';
 
-import { EMAIL_OTP_LENGTH, passwordRuleChecks, registerUserSchema } from '@dreamingcloud/contracts';
+import { passwordRuleChecks, registerUserSchema } from '@dreamingcloud/contracts';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -27,9 +27,9 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
 
   const passwordReady = Object.values(passwordRuleChecks).every((check) => check(form.password));
-  const codeReady = form.emailCode.length === EMAIL_OTP_LENGTH;
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -102,6 +102,7 @@ export default function RegisterPage() {
           emailCode={form.emailCode}
           onEmailChange={(email) => setForm((current) => ({ ...current, email }))}
           onEmailCodeChange={(emailCode) => setForm((current) => ({ ...current, emailCode }))}
+          onVerifiedChange={setEmailVerified}
         />
         <PasswordField
           autoComplete="new-password"
@@ -113,7 +114,11 @@ export default function RegisterPage() {
           onChange={(password) => setForm((current) => ({ ...current, password }))}
         />
         {error ? <Alert variant="destructive">{error}</Alert> : null}
-        <Button className="w-full" disabled={busy || !passwordReady || !codeReady} type="submit">
+        <Button
+          className="w-full"
+          disabled={busy || !passwordReady || !emailVerified}
+          type="submit"
+        >
           {t('registerSubmit')}
         </Button>
       </form>

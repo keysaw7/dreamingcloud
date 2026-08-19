@@ -18,4 +18,5 @@ export interface EmailOtpRepository {
   invalidateActive(email: string): Promise<void>;
   markConsumed(id: UniqueId): Promise<void>;
   incrementAttempts(id: UniqueId): Promise<number>;
+  extendExpiry(id: UniqueId, expiresAt: Date): Promise<void>;
 }

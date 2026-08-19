@@ -12,6 +12,7 @@ import { Alert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { requestEmailCode } from '../../lib/api/auth';
+import { useEmailCodeVerification } from './use-email-code-verification';
 
 export function EmailVerificationField({
   disabled,
@@ -19,19 +20,22 @@ export function EmailVerificationField({
   emailCode,
   onEmailChange,
   onEmailCodeChange,
+  onVerifiedChange,
 }: Readonly<{
   disabled?: boolean;
   email: string;
   emailCode: string;
   onEmailChange: (value: string) => void;
   onEmailCodeChange: (value: string) => void;
+  onVerifiedChange: (verified: boolean) => void;
 }>) {
   const t = useTranslations('auth');
   const common = useTranslations('common');
   const [codeSent, setCodeSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const verification = useEmailCodeVerification({ email, emailCode, onVerifiedChange });
 
   useEffect(() => {
     if (cooldown <= 0) {
@@ -46,10 +50,11 @@ export function EmailVerificationField({
   }, [cooldown]);
 
   async function sendCode(): Promise<void> {
-    setError(null);
+    setSendError(null);
+    verification.reset();
     const parsed = requestEmailCodeSchema.safeParse({ email });
     if (!parsed.success) {
-      setError(t('emailInvalid'));
+      setSendError(t('emailInvalid'));
       return;
     }
 
@@ -59,8 +64,8 @@ export function EmailVerificationField({
       setCodeSent(true);
       onEmailCodeChange('');
       setCooldown(EMAIL_OTP_COOLDOWN_SECONDS);
-    } catch (sendError) {
-      setError(sendError instanceof Error ? sendError.message : common('errorGeneric'));
+    } catch (error) {
+      setSendError(error instanceof Error ? error.message : common('errorGeneric'));
     } finally {
       setSending(false);
     }
@@ -71,11 +76,14 @@ export function EmailVerificationField({
       setCodeSent(false);
       onEmailCodeChange('');
       setCooldown(0);
+      verification.reset();
     }
     onEmailChange(value);
   }
 
   const busy = Boolean(disabled) || sending;
+  const error = sendError ?? verification.error;
+  const statusId = 'register-email-code-status';
   const verifyLabel =
     codeSent && cooldown > 0
       ? t('resendCodeIn', { seconds: cooldown })
@@ -117,21 +125,42 @@ export function EmailVerificationField({
             {t('emailCode')}
           </label>
           <Input
+            aria-busy={verification.checking || undefined}
+            aria-describedby={
+              verification.checking || verification.verified || error ? statusId : undefined
+            }
+            aria-invalid={verification.error ? true : undefined}
             autoComplete="one-time-code"
             disabled={busy}
             id="register-email-code"
             inputMode="numeric"
             maxLength={EMAIL_OTP_LENGTH}
             pattern={`\\d{${EMAIL_OTP_LENGTH}}`}
+            readOnly={verification.verified}
             required
             value={emailCode}
             onChange={(event) =>
               onEmailCodeChange(event.target.value.replace(/\D/g, '').slice(0, EMAIL_OTP_LENGTH))
             }
           />
+          {verification.checking || verification.verified ? (
+            <p
+              className={
+                verification.verified ? 'text-sm text-success' : 'text-muted-foreground text-sm'
+              }
+              id={statusId}
+              role="status"
+            >
+              {verification.checking ? t('emailCodeChecking') : t('emailCodeVerified')}
+            </p>
+          ) : null}
         </>
       ) : null}
-      {error ? <Alert variant="destructive">{error}</Alert> : null}
+      {error ? (
+        <Alert id={statusId} variant="destructive">
+          {error}
+        </Alert>
+      ) : null}
     </div>
   );
 }

@@ -5,6 +5,7 @@ export const PASSWORD_MAX_LENGTH = 128;
 export const EMAIL_OTP_LENGTH = 6;
 export const EMAIL_OTP_COOLDOWN_SECONDS = 60;
 export const EMAIL_OTP_TTL_MINUTES = 10;
+export const EMAIL_OTP_VERIFIED_TTL_MINUTES = 30;
 export const EMAIL_OTP_MAX_ATTEMPTS = 5;
 
 export const passwordRuleChecks = {
@@ -47,6 +48,11 @@ export const loginUserSchema = z.object({
 
 export const requestEmailCodeSchema = z.object({
   email: z.email(),
+});
+
+export const verifyEmailCodeSchema = z.object({
+  email: z.email(),
+  emailCode: emailCodeSchema,
 });
 
 export const resetPasswordSchema = z.object({

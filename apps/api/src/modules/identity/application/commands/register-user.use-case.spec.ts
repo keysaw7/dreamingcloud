@@ -13,6 +13,7 @@ import type {
 import type { PasswordHasher } from '../../domain/ports/password-hasher';
 import type { TokenService } from '../../domain/ports/token-service';
 import type { UserRepository } from '../../domain/ports/user.repository';
+import { EmailOtpVerifier } from '../email-otp-verifier';
 import { RegisterUserUseCase } from './register-user.use-case';
 
 class InMemoryUsers implements UserRepository {
@@ -82,6 +83,10 @@ class InMemoryEmailOtps implements EmailOtpRepository {
     this.items = this.items.map((item) => (item.id.equals(id) ? next : item));
     return next.attemptCount;
   }
+
+  public async extendExpiry(id: UniqueId, expiresAt: Date): Promise<void> {
+    this.items = this.items.map((item) => (item.id.equals(id) ? { ...item, expiresAt } : item));
+  }
 }
 
 function createTokenService(): TokenService {
@@ -124,13 +129,15 @@ describe('RegisterUserUseCase', () => {
   it('creates an active verified user when the email code is valid', async () => {
     const users = new InMemoryUsers();
     const otps = new InMemoryEmailOtps([createChallenge()]);
+    const tokens = createTokenService();
     const useCase = new RegisterUserUseCase(
       users,
       passwordHasher,
-      createTokenService(),
+      tokens,
       otps,
       events,
       transactions,
+      new EmailOtpVerifier(otps, tokens),
     );
 
     const result = await useCase.execute({
@@ -151,13 +158,15 @@ describe('RegisterUserUseCase', () => {
   it('rejects an invalid code without creating a user', async () => {
     const users = new InMemoryUsers();
     const otps = new InMemoryEmailOtps([createChallenge()]);
+    const tokens = createTokenService();
     const useCase = new RegisterUserUseCase(
       users,
       passwordHasher,
-      createTokenService(),
+      tokens,
       otps,
       events,
       transactions,
+      new EmailOtpVerifier(otps, tokens),
     );
 
     await expect(
@@ -175,13 +184,18 @@ describe('RegisterUserUseCase', () => {
 
   it('rejects an expired code', async () => {
     const users = new InMemoryUsers();
+    const tokens = createTokenService();
+    const otps = new InMemoryEmailOtps([
+      createChallenge({ expiresAt: new Date(Date.now() - 1000) }),
+    ]);
     const useCase = new RegisterUserUseCase(
       users,
       passwordHasher,
-      createTokenService(),
-      new InMemoryEmailOtps([createChallenge({ expiresAt: new Date(Date.now() - 1000) })]),
+      tokens,
+      otps,
       events,
       transactions,
+      new EmailOtpVerifier(otps, tokens),
     );
 
     await expect(
@@ -199,13 +213,15 @@ describe('RegisterUserUseCase', () => {
   it('locks the challenge after too many invalid attempts', async () => {
     const challenge = createChallenge();
     const otps = new InMemoryEmailOtps([challenge]);
+    const tokens = createTokenService();
     const useCase = new RegisterUserUseCase(
       new InMemoryUsers(),
       passwordHasher,
-      createTokenService(),
+      tokens,
       otps,
       events,
       transactions,
+      new EmailOtpVerifier(otps, tokens),
     );
     const input = {
       email: 'ada@example.com',
@@ -234,13 +250,15 @@ describe('RegisterUserUseCase', () => {
     });
     const challenge = createChallenge();
     const otps = new InMemoryEmailOtps([challenge]);
+    const tokens = createTokenService();
     const useCase = new RegisterUserUseCase(
       new InMemoryUsers([existing]),
       passwordHasher,
-      createTokenService(),
+      tokens,
       otps,
       events,
       transactions,
+      new EmailOtpVerifier(otps, tokens),
     );
 
     await expect(

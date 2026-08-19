@@ -3,6 +3,7 @@ import {
   registerUserSchema,
   requestEmailCodeSchema,
   resetPasswordSchema,
+  verifyEmailCodeSchema,
 } from '@dreamingcloud/contracts';
 import { Body, Controller, Delete, Get, Inject, Patch, Post, Req, Res } from '@nestjs/common';
 import { z } from 'zod';
@@ -37,6 +38,7 @@ import { RequestEmailCodeUseCase } from '../../application/commands/request-emai
 import { RequestPasswordResetUseCase } from '../../application/commands/request-password-reset.use-case';
 import { ResetPasswordUseCase } from '../../application/commands/reset-password.use-case';
 import { UpdateProfileUseCase } from '../../application/commands/update-profile.use-case';
+import { VerifyEmailCodeUseCase } from '../../application/commands/verify-email-code.use-case';
 import { VerifyEmailUseCase } from '../../application/commands/verify-email.use-case';
 import { GetCurrentUserQuery } from '../../application/queries/get-current-user.query';
 import { CurrentUser } from './current-user.decorator';
@@ -46,6 +48,7 @@ export class AuthController {
   public constructor(
     private readonly registerUser: RegisterUserUseCase,
     private readonly requestEmailCode: RequestEmailCodeUseCase,
+    private readonly verifyEmailCode: VerifyEmailCodeUseCase,
     private readonly loginUser: LoginUserUseCase,
     private readonly refreshSession: RefreshSessionUseCase,
     private readonly logoutUser: LogoutUserUseCase,
@@ -72,6 +75,14 @@ export class AuthController {
   public async requestEmailVerificationCode(@Body() body: unknown) {
     const input = requestEmailCodeSchema.parse(body);
     await this.requestEmailCode.execute(input.email);
+    return { data: { ok: true } };
+  }
+
+  @Public()
+  @Post('auth/verify-email-code')
+  public async verifyEmailVerificationCode(@Body() body: unknown) {
+    const input = verifyEmailCodeSchema.parse(body);
+    await this.verifyEmailCode.execute(input.email, input.emailCode);
     return { data: { ok: true } };
   }
 

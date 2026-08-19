@@ -76,6 +76,10 @@ class InMemoryEmailOtps implements EmailOtpRepository {
     this.items = this.items.map((item) => (item.id.equals(id) ? next : item));
     return next.attemptCount;
   }
+
+  public async extendExpiry(id: UniqueId, expiresAt: Date): Promise<void> {
+    this.items = this.items.map((item) => (item.id.equals(id) ? { ...item, expiresAt } : item));
+  }
 }
 
 function createTokenService(code = '123456'): TokenService {
